@@ -7,6 +7,8 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --opt
 FROM php:8.4-cli
 
 WORKDIR /app
+ARG BUILD_ID=c27da18
+RUN echo "MathPHP website build ${BUILD_ID}"
 COPY --from=dependencies /build/vendor /app/vendor
 COPY public /app/public
 
