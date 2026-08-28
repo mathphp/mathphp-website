@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 // Deployment marker: private visuals package integration (2026-08-27).
 
-require dirname(__DIR__, 2) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
 
-$explainingAutoload = dirname(__DIR__, 2) . '/private/mathphp-explaining/vendor/autoload.php';
+$explainingAutoload = dirname(__DIR__) . '/private/mathphp-explaining/vendor/autoload.php';
 if (is_file($explainingAutoload)) {
     require_once $explainingAutoload;
 }
