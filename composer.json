@@ -1,0 +1,18 @@
+{
+    "name": "mathphp/mathphp-website",
+    "description": "MathPHP landing page, documentation site, and interactive evaluator",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "mathphp/mathphp": "dev-main"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/mathphp/mathphp.git"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    }
+}
