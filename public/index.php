@@ -42,7 +42,7 @@ function renderLayout(string $title, string $content, string $active): string
     $links = '<a class="nav-home' . ($active === 'home' ? ' active' : '') . '" href="?page=home"' . ($active === 'home' ? ' aria-current="page"' : '') . '>Overview</a>';
     foreach ($groups as $label => $items) {
         $isGroupActive = in_array($active, array_keys($items), true);
-        $links .= '<details class="nav-menu"' . ($isGroupActive ? ' open' : '') . '><summary' . ($isGroupActive ? ' class="active"' : '') . '>' . e($label) . '<span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-popover">';
+        $links .= '<details class="nav-menu"><summary' . ($isGroupActive ? ' class="active"' : '') . '>' . e($label) . '<span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-popover">';
         foreach ($items as $key => [$itemLabel, $itemDescription]) {
             $itemActive = $active === $key;
             $links .= '<a class="nav-item' . ($itemActive ? ' active' : '') . '" href="?page=' . $key . '"' . ($itemActive ? ' aria-current="page"' : '') . '><span>' . e($itemLabel) . '</span><small>' . e($itemDescription) . '</small></a>';
