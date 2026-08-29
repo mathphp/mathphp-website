@@ -109,30 +109,15 @@ function renderPricing(): string
 
 function renderDocs(): string
 {
-    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Reference</div><h1>The useful parts,<br><em>in one place.</em></h1><p>MathPHP keeps the language intentionally small. That makes expressions easy to review and failures easy to explain.</p></section>'
-        . '<section class="docs-layout wrap"><aside class="docs-nav"><a class="active" href="#grammar">Grammar</a><a href="#functions">Functions</a><a href="#errors">Errors</a><a href="#limits">Limits</a><a href="#api">PHP API</a></aside><div class="docs-content">'
-        . '<section id="grammar"><div class="section-kicker">01 · Grammar</div><h2>Familiar operators, explicit behavior.</h2><p>Use numbers, variables, parentheses, unary signs, and the operators below. Exponentiation is right-associative.</p><div class="table-wrap"><table><thead><tr><th>Operator</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td><code>+</code> <code>-</code></td><td>Addition / subtraction</td><td><code>18 - 4</code></td></tr><tr><td><code>*</code> <code>/</code> <code>%</code></td><td>Product / quotient / remainder</td><td><code>9 % 4</code></td></tr><tr><td><code>^</code></td><td>Exponentiation</td><td><code>2^3^2</code></td></tr><tr><td><code>( )</code></td><td>Grouping</td><td><code>(subtotal + tax)</code></td></tr></tbody></table></div></section>'
-        . '<section id="functions"><div class="section-kicker">02 · Functions</div><h2>Ten carefully chosen building blocks.</h2><p>Functions are deterministic and validated before they run.</p><div class="function-list"><code>abs(x)</code><code>sqrt(x)</code><code>sin(x)</code><code>cos(x)</code><code>tan(x)</code><code>log(x)</code><code>log10(x)</code><code>exp(x)</code><code>min(a, b, ...)</code><code>max(a, b, ...)</code></div></section>'
-        . '<section id="errors"><div class="section-kicker">03 · Errors</div><h2>Stable codes. Useful spans.</h2><p>Catch <code>MathException</code> and expose the machine-readable code and exact source span to your UI.</p><div class="error-grid"><div><code>lex.malformed_number</code><span>Invalid numeric token</span></div><div><code>parse.unexpected_token</code><span>Expression structure is invalid</span></div><div><code>eval.division_by_zero</code><span>Division or modulo by zero</span></div><div><code>eval.integer_overflow</code><span>Exact integer result cannot fit</span></div></div></section>'
-        . '<section id="limits"><div class="section-kicker">04 · Limits</div><h2>Bounded on purpose.</h2><p>Configure resource limits for expression length, nesting depth, function arguments, and factorial inputs.</p><div class="limit-note"><span>↳</span><div><strong>No surprises in production.</strong><br>Limits fail closed with explicit error codes before work can grow without bound.</div></div></section>'
-        . '<section id="api"><div class="section-kicker">05 · PHP API</div><h2>Install, evaluate, inspect.</h2><pre class="code-block"><code><span class="code-comment">// composer require mathphp/mathphp</span>
-<span class="code-keyword">use</span> MathPHP\Math;
-
-<span class="code-keyword">try</span> {
-    <span class="code-keyword">$result</span> = Math::evaluate(
-        <span class="code-string">\'(subtotal + tax) * 1.05\'</span>,
-        [<span class="code-string">\'subtotal\'</span> =&gt; 42.5, <span class="code-string">\'tax\'</span> =&gt; 0.2],
-    );
-} <span class="code-keyword">catch</span> (MathException <span class="code-keyword">$error</span>) {
-    <span class="code-keyword">echo</span> <span class="code-keyword">$error</span>-&gt;getErrorCode();
-}</code></pre></section>'
-        . '</div></section>'
-        . '<section class="guide-index wrap"><div class="section-kicker">Documentation paths</div><h2>Go deeper, one feature at a time.</h2><div class="guide-index-grid"><a href="?page=grammar"><span>Core · 01</span><strong>Grammar & precedence</strong><small>Operators, grouping, and AST rules →</small></a><a href="?page=functions"><span>Core · 02</span><strong>Functions & variables</strong><small>Allowlisted calls and custom functions →</small></a><a href="?page=errors"><span>Core · 03</span><strong>Errors & spans</strong><small>Stable codes and useful validation →</small></a><a href="?page=limits"><span>Core · 04</span><strong>Resource limits</strong><small>Bound work before it grows →</small></a><a href="?page=api"><span>Core · 05</span><strong>PHP API</strong><small>Install, evaluate, integrate →</small></a><a href="?page=explaining-steps"><span>Add-on · Explaining</span><strong>Step-by-step evaluation</strong><small>Build a lesson from a result →</small></a><a href="?page=explaining-translations"><span>Add-on · Explaining</span><strong>Translations & observers</strong><small>Localize without changing math →</small></a><a href="?page=visuals-plots"><span>Add-on · Visuals</span><strong>Plots & sampling</strong><small>Data first, pixels second →</small></a><a href="?page=visuals-analysis"><span>Add-on · Visuals</span><strong>Equations & calculus</strong><small>Models for richer interfaces →</small></a></div></section>';
+    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Documentation</div><h1>Learn the engine.<br><em>Then extend it.</em></h1><p>A task-focused guide to the public evaluator, its boundaries, and the private packages that add teaching and presentation layers.</p></section>'
+        . '<section class="docs-home wrap"><div class="docs-home-lead"><div class="section-kicker">Start here</div><h2>Choose the question you need to answer.</h2><p>Every page includes a concrete expression, the relevant contract, and a path into the next feature.</p></div><div class="guide-index-grid"><a href="?page=getting-started"><span>Core · 00</span><strong>Getting started</strong><small>Install and make the first call →</small></a><a href="?page=grammar"><span>Core · 01</span><strong>Grammar & precedence</strong><small>Operators, grouping, and AST rules →</small></a><a href="?page=functions"><span>Core · 02</span><strong>Functions & variables</strong><small>Allowlisted calls and custom functions →</small></a><a href="?page=errors"><span>Core · 03</span><strong>Errors & spans</strong><small>Stable codes and useful validation →</small></a><a href="?page=limits"><span>Core · 04</span><strong>Resource limits</strong><small>Bound work before it grows →</small></a><a href="?page=api"><span>Core · 05</span><strong>PHP API</strong><small>Install, evaluate, integrate →</small></a></div></section>'
+        . '<section class="docs-addons wrap"><div class="section-kicker">Private add-ons</div><h2>When a number needs a lesson or a picture.</h2><div class="addon-doc-grid"><a href="?page=explaining-steps"><span class="addon-doc-mark">01</span><strong>Explaining</strong><small>Steps, translations, observers</small><em>Explore the teaching layer →</em></a><a href="?page=visuals-plots"><span class="addon-doc-mark">02</span><strong>Visuals</strong><small>Plots, models, SVG fallbacks</small><em>Explore the presentation layer →</em></a></div></section>';
 }
 
 function renderGuide(string $guide): string
 {
     $guides = [
+        'getting-started' => ['Core guide', 'Getting started', 'Install the core package, make a safe evaluation, and understand where the rest of the guide fits.', '<h2>One dependency. One public call.</h2><p>MathPHP is designed to sit behind a form, rule editor, API, or pricing calculation. Start with the bounded core, then add the private layers only when your product needs them.</p><pre class="code-block"><code><span class="code-comment">// composer require mathphp/mathphp</span><br><span class="code-keyword">$total</span> = Math::evaluate(<span class="code-string">\'subtotal * (1 + tax)\'</span>, [<span class="code-string">\'subtotal\'</span> =&gt; 42.5, <span class="code-string">\'tax\'</span> =&gt; 0.2]);</code></pre><div class="guide-note"><strong>Next:</strong><span>Learn the <a href="?page=grammar">grammar</a>, then wire the <a href="?page=api">PHP API</a> into your application.</span></div>'],
         'grammar' => ['Core feature', 'Grammar & precedence', 'Build expressions people can read: numbers, variables, grouping, operators, and deliberate precedence.', '<h2>From text to a typed result.</h2><p>MathPHP accepts a small expression language and turns it into an immutable AST before evaluation. Multiplication binds tighter than addition, exponentiation is right-associative, and unary signs have explicit rules.</p><pre class="code-block"><code><span class="code-keyword">$result</span> = Math::evaluate(<span class="code-string">\'gross * (1 - discount)\'</span>, [<span class="code-string">\'gross\'</span> =&gt; 125, <span class="code-string">\'discount\'</span> =&gt; 0.2]);</code></pre><div class="guide-note"><strong>Try it:</strong><span><code>2^3^2</code> is <code>512</code>; <code>-2^2</code> is <code>-4</code>.</span></div>'],
         'functions' => ['Core feature', 'Functions & variables', 'Use a focused allowlist of math functions and pass values explicitly from your application.', '<h2>Small allowlist, predictable domains.</h2><p>Built-ins such as <code>sqrt</code>, <code>sin</code>, <code>cos</code>, <code>log</code>, <code>min</code>, and <code>max</code> are validated for arity and domain before execution. Variables are supplied per call and never read from global PHP state.</p><div class="guide-grid"><div><span class="feature-number">01</span><h3>Pass values</h3><p>Keep user input separate from trusted application data.</p></div><div><span class="feature-number">02</span><h3>Register safely</h3><p>Add a custom function with an explicit name, arity, and callback.</p></div></div><a class="button button-secondary" href="?page=playground">Try a function <span>↗</span></a>'],
         'errors' => ['Core feature', 'Errors & source spans', 'Make invalid input useful with stable error codes, exact spans, and phase-aware exceptions.', '<h2>Failures you can design around.</h2><p>Lexing, parsing, and evaluation errors are represented by <code>MathException</code> subclasses. Every expression error carries a stable code and a source span so your form can underline the exact problem.</p><div class="error-grid"><div><code>lex.malformed_number</code><span>Invalid numeric token</span></div><div><code>parse.unexpected_token</code><span>Expression structure is invalid</span></div><div><code>eval.division_by_zero</code><span>Division or modulo by zero</span></div><div><code>eval.integer_overflow</code><span>Exact integer result cannot fit</span></div></div>'],
@@ -147,7 +132,22 @@ function renderGuide(string $guide): string
         return renderDocs();
     }
     [$eyebrow, $title, $description, $body] = $guides[$guide];
-    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>' . e($eyebrow) . '</div><h1>' . e($title) . '</h1><p>' . e($description) . '</p></section><section class="guide-page wrap"><a class="guide-back" href="?page=docs">← All documentation</a><div class="guide-content">' . $body . '</div></section>';
+    $coreNav = ['getting-started' => 'Getting started', 'grammar' => 'Grammar & precedence', 'functions' => 'Functions & variables', 'errors' => 'Errors & spans', 'limits' => 'Resource limits', 'api' => 'PHP API'];
+    $addonNav = ['explaining-steps' => 'Explaining · Steps', 'explaining-translations' => 'Explaining · Translations', 'visuals-plots' => 'Visuals · Plots', 'visuals-analysis' => 'Visuals · Analysis'];
+    $nav = '';
+    foreach (['Core' => $coreNav, 'Add-ons' => $addonNav] as $label => $items) {
+        $nav .= '<div class="guide-nav-group"><span>' . e($label) . '</span>';
+        foreach ($items as $key => $item) {
+            $nav .= '<a' . ($key === $guide ? ' class="active"' : '') . ' href="?page=' . $key . '">' . e($item) . '</a>';
+        }
+        $nav .= '</div>';
+    }
+    $keys = array_keys($guides);
+    $position = array_search($guide, $keys, true);
+    $previous = $position > 0 ? $keys[$position - 1] : null;
+    $next = $position < count($keys) - 1 ? $keys[$position + 1] : null;
+    $pager = '<div class="guide-pager">' . ($previous ? '<a href="?page=' . $previous . '"><small>Previous</small><strong>← ' . e($guides[$previous][1]) . '</strong></a>' : '<span></span>') . ($next ? '<a class="next" href="?page=' . $next . '"><small>Next</small><strong>' . e($guides[$next][1]) . ' →</strong></a>' : '<span></span>') . '</div>';
+    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>' . e($eyebrow) . '</div><h1>' . e($title) . '</h1><p>' . e($description) . '</p></section><section class="guide-page wrap"><a class="guide-back" href="?page=docs">← All documentation</a><div class="guide-layout"><aside class="guide-sidebar">' . $nav . '</aside><div class="guide-content">' . $body . $pager . '</div></div></section>';
 }
 
 function renderPlayground(): string
@@ -434,16 +434,16 @@ if (($_GET['api'] ?? '') === 'capabilities') {
 }
 
 $page = $_GET['page'] ?? 'home';
-$page = in_array($page, ['home', 'packages', 'explaining', 'visuals', 'docs', 'playground', 'pricing', 'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis'], true) ? $page : 'home';
+$page = in_array($page, ['home', 'packages', 'explaining', 'visuals', 'docs', 'playground', 'pricing', 'getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis'], true) ? $page : 'home';
 $content = match ($page) {
     'packages' => renderPackages(),
     'explaining', 'visuals' => renderPackage($page),
     'docs' => renderDocs(),
     'playground' => renderPlayground(),
     'pricing' => renderPricing(),
-    'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis' => renderGuide($page),
+    'getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis' => renderGuide($page),
     default => renderHome(),
 };
 
-$activePage = in_array($page, ['explaining', 'visuals'], true) ? 'packages' : (in_array($page, ['grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis'], true) ? 'docs' : $page);
+$activePage = in_array($page, ['explaining', 'visuals'], true) ? 'packages' : (in_array($page, ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'visuals-plots', 'visuals-analysis'], true) ? 'docs' : $page);
 echo renderLayout(ucfirst($page), $content, $activePage);
