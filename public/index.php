@@ -65,8 +65,8 @@ function renderLayout(string $title, string $content, string $active): string
 
 function renderHome(): string
 {
-    return '<section class="hero wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Scalar expressions for PHP</div>'
-        . '<div class="hero-grid"><div><h1>Math, with <em>boundaries.</em></h1><p class="hero-copy">A small, predictable expression evaluator for the moments when a calculator needs to live inside your application.</p>'
+    return '<section class="hero wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Open-source PHP math library</div>'
+        . '<div class="hero-grid"><div><h1>Mathematics for PHP,<br><em>made predictable.</em></h1><p class="hero-copy">Evaluate readable expressions with explicit grammar, stable errors, and configurable limits. Add private explanation and visual layers only when your product needs them.</p>'
         . '<div class="hero-actions"><a class="button button-primary" href="?page=playground">Open evaluator <span>↗</span></a><a class="text-link" href="?page=docs">Read the docs <span>→</span></a></div>'
         . '<div class="hero-note"><span class="note-line"></span><span>PHP 8.2+ · no runtime dependencies · explicit errors</span></div></div>'
         . '<div class="console-card"><div class="console-top"><span class="console-label">mathphp / playground</span><span class="console-status"><i></i> ready</span></div><div class="console-body"><div><span class="prompt">&gt;</span><span> (subtotal + tax) * 1.05</span></div><div class="console-muted">subtotal = 42.50 &nbsp; tax = 0.20</div><div class="console-result"><span class="result-arrow">→</span><strong>53.55</strong><span class="result-type">float</span></div></div><div class="console-foot"><span>deterministic</span><span>bounded</span><span>typed</span></div></div></div></section>'
