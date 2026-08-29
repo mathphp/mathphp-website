@@ -56,7 +56,8 @@ function renderLayout(string $title, string $content, string $active): string
         . '<title>' . e($title) . ' · MathPHP</title>'
         . '<link rel="stylesheet" href="assets/site.css"></head><body>'
         . '<header class="site-header"><a class="brand" href="?page=home"><span class="brand-mark">∑</span><span>MathPHP</span></a>'
-        . '<nav aria-label="Primary navigation">' . $links . '</nav><a class="header-cta" href="?page=playground">Open playground <span>↗</span></a></header>'
+        . '<button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu"><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>Menu</span></button>'
+        . '<nav id="primary-menu" aria-label="Primary navigation">' . $links . '</nav><a class="header-cta" href="?page=playground">Open playground <span>↗</span></a></header>'
         . '<main>' . $content . '</main>'
         . '<footer class="site-footer"><span>MathPHP · deterministic math for PHP</span><span>Built with boundaries in mind.</span></footer>'
         . '<script src="assets/site.js" defer></script></body></html>';
