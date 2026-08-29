@@ -2,16 +2,23 @@
   const menus = [...document.querySelectorAll('.nav-menu')];
   const mobileToggle = document.querySelector('.mobile-menu-toggle');
   const primaryMenu = document.querySelector('#primary-menu');
+  const menuBackdrop = document.querySelector('.menu-backdrop');
   const closeMobileMenu = () => {
     if (!mobileToggle || !primaryMenu) return;
     mobileToggle.setAttribute('aria-expanded', 'false');
     primaryMenu.classList.remove('mobile-open');
+    menuBackdrop?.classList.remove('visible');
+    document.body.classList.remove('menu-is-open');
   };
   mobileToggle?.addEventListener('click', () => {
     const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
     mobileToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
     primaryMenu?.classList.toggle('mobile-open', !expanded);
+    menuBackdrop?.classList.toggle('visible', !expanded);
+    document.body.classList.toggle('menu-is-open', !expanded);
+    if (!expanded) primaryMenu?.querySelector('a')?.focus();
   });
+  menuBackdrop?.addEventListener('click', closeMobileMenu);
   primaryMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileMenu));
   menus.forEach((menu) => menu.addEventListener('toggle', () => {
     if (!menu.open) return;
