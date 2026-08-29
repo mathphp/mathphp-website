@@ -34,11 +34,20 @@ function formatResult(int|float $result): string
 
 function renderLayout(string $title, string $content, string $active): string
 {
-    $nav = ['home' => 'Overview', 'packages' => 'Packages', 'docs' => 'Docs', 'playground' => 'Playground', 'pricing' => 'Pricing'];
-    $links = '';
-    foreach ($nav as $key => $label) {
-        $class = $active === $key ? ' class="active"' : '';
-        $links .= '<a' . $class . ' href="?page=' . $key . '">' . e($label) . '</a>';
+    $groups = [
+        'Explore' => ['packages' => ['Packages', 'Core and private add-ons'], 'docs' => ['Documentation', 'Guides and API contracts']],
+        'Build' => ['playground' => ['Playground', 'Evaluate, explain, and visualize'], 'visuals' => ['Visuals', 'Graphs, plots, and SVG output']],
+        'Support' => ['pricing' => ['Pricing & access', 'Sponsorship and team licenses']],
+    ];
+    $links = '<a class="nav-home' . ($active === 'home' ? ' active' : '') . '" href="?page=home"' . ($active === 'home' ? ' aria-current="page"' : '') . '>Overview</a>';
+    foreach ($groups as $label => $items) {
+        $isGroupActive = in_array($active, array_keys($items), true);
+        $links .= '<details class="nav-menu"' . ($isGroupActive ? ' open' : '') . '><summary' . ($isGroupActive ? ' class="active"' : '') . '>' . e($label) . '<span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-popover">';
+        foreach ($items as $key => [$itemLabel, $itemDescription]) {
+            $itemActive = $active === $key;
+            $links .= '<a class="nav-item' . ($itemActive ? ' active' : '') . '" href="?page=' . $key . '"' . ($itemActive ? ' aria-current="page"' : '') . '><span>' . e($itemLabel) . '</span><small>' . e($itemDescription) . '</small></a>';
+        }
+        $links .= '</div></details>';
     }
 
     return '<!doctype html><html lang="en"><head><meta charset="utf-8">'
@@ -47,7 +56,7 @@ function renderLayout(string $title, string $content, string $active): string
         . '<title>' . e($title) . ' · MathPHP</title>'
         . '<link rel="stylesheet" href="assets/site.css"></head><body>'
         . '<header class="site-header"><a class="brand" href="?page=home"><span class="brand-mark">∑</span><span>MathPHP</span></a>'
-        . '<nav aria-label="Primary">' . $links . '</nav><a class="header-cta" href="?page=playground">Try it <span>↗</span></a></header>'
+        . '<nav aria-label="Primary navigation">' . $links . '</nav><a class="header-cta" href="?page=playground">Open playground <span>↗</span></a></header>'
         . '<main>' . $content . '</main>'
         . '<footer class="site-footer"><span>MathPHP · deterministic math for PHP</span><span>Built with boundaries in mind.</span></footer>'
         . '<script src="assets/site.js" defer></script></body></html>';
@@ -475,5 +484,5 @@ if (in_array($page, $guidePages, true)) {
     $content = renderGuide($page);
 }
 
-$activePage = in_array($page, ['explaining', 'visuals'], true) ? 'packages' : (in_array($page, $guidePages, true) ? 'docs' : $page);
+$activePage = $page === 'explaining' ? 'packages' : (in_array($page, $guidePages, true) ? 'docs' : $page);
 echo renderLayout(ucfirst($page), $content, $activePage);

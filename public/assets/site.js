@@ -1,4 +1,16 @@
 (() => {
+  const menus = [...document.querySelectorAll('.nav-menu')];
+  menus.forEach((menu) => menu.addEventListener('toggle', () => {
+    if (!menu.open) return;
+    menus.filter((other) => other !== menu).forEach((other) => { other.open = false; });
+  }));
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.nav-menu')) menus.forEach((menu) => { menu.open = false; });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') menus.forEach((menu) => { menu.open = false; });
+  });
+
   const root = document.querySelector('[data-playground]');
   if (!root) return;
 
