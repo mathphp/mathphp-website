@@ -10,6 +10,10 @@ $explainingAutoload = dirname(__DIR__) . '/private/mathphp-explaining/vendor/aut
 if (is_file($explainingAutoload)) {
     require_once $explainingAutoload;
 }
+$unitsAutoload = dirname(__DIR__) . '/private/mathphp-units/vendor/autoload.php';
+if (is_file($unitsAutoload)) {
+    require_once $unitsAutoload;
+}
 
 use MathPHP\Math;
 use MathPHP\Exception\MathException;
@@ -35,7 +39,7 @@ function formatResult(int|float $result): string
 function renderLayout(string $title, string $content, string $active): string
 {
     $groups = [
-        'Explore' => ['packages' => ['Packages', 'Core and private add-ons'], 'docs' => ['Documentation', 'Guides and API contracts']],
+        'Explore' => ['packages' => ['Packages', 'Core and private add-ons'], 'docs' => ['Documentation', 'Guides and API contracts'], 'units' => ['Units', 'Dimensions and conversions']],
         'Build' => ['playground' => ['Playground', 'Evaluate, explain, and visualize'], 'visuals' => ['Visuals', 'Graphs, plots, and SVG output']],
         'Support' => ['pricing' => ['Pricing & access', 'Sponsorship and team licenses']],
     ];
@@ -79,28 +83,29 @@ function renderHome(): string
 
 function renderPackages(): string
 {
-    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Package catalogue</div><h1>One core.<br><em>Two ways to extend it.</em></h1><p>The evaluator stays free and focused. Add the private package that gives your users a lesson, a picture, or both.</p></section>'
-        . '<section class="package-overview wrap"><div class="package-overview-grid"><article class="package-feature package-feature-warm"><span class="package-label">01 · Private add-on</span><h2>Explain every move.</h2><p><code>mathphp/mathphp-explaining</code> turns an AST evaluation into ordered, translated steps with substitutions, partial results, and source spans.</p><a class="button button-secondary" href="?page=explaining">Explore Explaining <span>→</span></a></article><article class="package-feature package-feature-cool"><span class="package-label">02 · Private add-on</span><h2>Make the result visible.</h2><p><code>mathphp/mathphp-visuals</code> produces portable chart data and accessible SVG fallbacks for plots, matrices, calculus, and statistics.</p><a class="button button-secondary" href="?page=visuals">Explore Visuals <span>→</span></a></article></div><div class="package-note"><strong>Built as additions.</strong><span>Install the free core alone, or load either private package when your product needs it.</span><a href="?page=pricing">See sponsor access and pricing <span>→</span></a></div></section>'
+    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Package catalogue</div><h1>One core.<br><em>Three ways to extend it.</em></h1><p>The evaluator stays free and focused. Add the private package that gives your users a lesson, a picture, or quantities with real units.</p></section>'
+        . '<section class="package-overview wrap"><div class="package-overview-grid"><article class="package-feature package-feature-warm"><span class="package-label">01 · Private add-on</span><h2>Explain every move.</h2><p><code>mathphp/mathphp-explaining</code> turns an AST evaluation into ordered, translated steps with substitutions, partial results, and source spans.</p><a class="button button-secondary" href="?page=explaining">Explore Explaining <span>→</span></a></article><article class="package-feature package-feature-cool"><span class="package-label">02 · Private add-on</span><h2>Make the result visible.</h2><p><code>mathphp/mathphp-visuals</code> produces portable chart data and accessible SVG fallbacks for plots, matrices, calculus, and statistics.</p><a class="button button-secondary" href="?page=visuals">Explore Visuals <span>→</span></a></article><article class="package-feature package-feature-cool"><span class="package-label">03 · Private add-on</span><h2>Keep units attached.</h2><p><code>mathphp/mathphp-units</code> parses quantities such as <code>2m * 6 + 200cm</code>, normalizes compatible dimensions, and returns a formatted result.</p><a class="button button-secondary" href="?page=units">Explore Units <span>→</span></a></article></div><div class="package-note"><strong>Built as additions.</strong><span>Install the free core alone, or load one or more private packages when your product needs them.</span><a href="?page=pricing">See sponsor access and pricing <span>→</span></a></div></section>'
         . '<section class="detail-section wrap"><div class="section-kicker">Choose by job</div><div class="comparison-table"><div><strong>Need to teach?</strong><span>Explaining gives you ordered steps, stable translation keys, and analyzer models for equations, systems, matrices, calculus, areas, roots, and statistics.</span><a href="?page=explaining-equations">Browse analyzers →</a></div><div><strong>Need to draw?</strong><span>Visuals gives you renderer-neutral representations, sampling metadata, and SVG output you can embed or replace.</span><a href="?page=visuals-rendering">Browse rendering →</a></div><div><strong>Need both?</strong><span>Compose them at the application edge. Core remains the only required runtime dependency.</span><a href="?page=pricing">See access →</a></div></div></section>';
 }
 
 function renderPackage(string $package): string
 {
     $explaining = $package === 'explaining';
-    $name = $explaining ? 'mathphp-explaining' : 'mathphp-visuals';
-    $title = $explaining ? 'Teach the calculation.' : 'Show the calculation.';
+    $units = $package === 'units';
+    $name = $explaining ? 'mathphp-explaining' : ($units ? 'mathphp-units' : 'mathphp-visuals');
+    $title = $explaining ? 'Teach the calculation.' : ($units ? 'Keep the unit attached.' : 'Show the calculation.');
     $description = $explaining
         ? 'A private extension that observes the same deterministic evaluator and turns each completed node into a useful, translatable lesson.'
-        : 'A private extension that keeps visual output structured first, with accessible SVG and image-ready fallbacks when a frontend renderer is not available.';
+        : ($units ? 'A private extension for dimensional quantities, conversions, and readable expressions such as 2m * 6 + 200cm.' : 'A private extension that keeps visual output structured first, with accessible SVG and image-ready fallbacks when a frontend renderer is not available.');
     $features = $explaining
         ? '<li>Post-order steps with dependencies</li><li>Substitutions, partial results, and exact spans</li><li>English and Danish translations</li><li>Custom observers without changing core semantics</li>'
-        : '<li>Line plots, areas, roots, and histograms</li><li>Equation, matrix, system, and calculus models</li><li>Renderer-neutral data for your own frontend</li><li>Accessible SVG and image-ready data URIs</li>';
+        : ($units ? '<li>Length, mass, time, temperature, and angle units</li><li>Automatic conversion before compatible addition</li><li>Dimensional algebra for rates and powers</li><li>Stable errors for incompatible quantities</li>' : '<li>Line plots, areas, roots, and histograms</li><li>Equation, matrix, system, and calculus models</li><li>Renderer-neutral data for your own frontend</li><li>Accessible SVG and image-ready data URIs</li>');
     $example = $explaining
         ? '<div class="package-code"><span class="code-comment">// explain the same expression your app evaluates</span><br><span class="code-keyword">$result</span> = (<span class="code-keyword">new</span> Explainer(Translations::create(<span class="code-string">\'en\'</span>)))-&gt;explain(<span class="code-string">\'(5*2)*2\'</span>);</div>'
-        : '<div class="package-code"><span class="code-comment">// keep data and presentation separate</span><br><span class="code-keyword">$plot</span> = (<span class="code-keyword">new</span> Plotter())-&gt;plot(<span class="code-string">\'sin(x)\'</span>, <span class="code-string">\'x\'</span>, 0, 6.28);</div>';
+        : ($units ? '<div class="package-code"><span class="code-comment">// units are normalized before addition</span><br><span class="code-keyword">$quantity</span> = UnitMath::evaluate(<span class="code-string">\'2m * 6 + 200cm\'</span>);<br><span class="code-comment">// 14 m</span></div>' : '<div class="package-code"><span class="code-comment">// keep data and presentation separate</span><br><span class="code-keyword">$plot</span> = (<span class="code-keyword">new</span> Plotter())-&gt;plot(<span class="code-string">\'sin(x)\'</span>, <span class="code-string">\'x\'</span>, 0, 6.28);</div>');
     $showcase = $explaining
         ? '<div class="showcase-card showcase-card-dark"><div class="showcase-top"><span>Expression</span><code>(5 × 2) × 2</code></div><ol class="step-list light"><li><span class="step-index">1</span><span><strong>Multiply 5 by 2</strong><small>5 × 2 = 10</small></span><b>10</b></li><li><span class="step-index">2</span><span><strong>Multiply the partial result by 2</strong><small>10 × 2 = 20</small></span><b>20</b></li></ol><div class="showcase-result"><span>Final result</span><strong>20</strong></div></div>'
-        : '<div class="showcase-card showcase-card-mint"><div class="showcase-top"><span>Plot model</span><code>sin(x)</code></div><div class="mini-chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="showcase-metrics"><span><b>128</b> samples</span><span><b>SVG</b> fallback</span><span><b>0 → 6.28</b> domain</span></div></div>';
+        : ($units ? '<div class="showcase-card showcase-card-dark"><div class="showcase-top"><span>Normalized quantity</span><code>2m × 6 + 200cm</code></div><ol class="step-list light"><li><span class="step-index">1</span><span><strong>Multiply the metres</strong><small>2 m × 6 = 12 m</small></span><b>12 m</b></li><li><span class="step-index">2</span><span><strong>Convert centimetres, then add</strong><small>200 cm = 2 m · 12 m + 2 m</small></span><b>14 m</b></li></ol><div class="showcase-result"><span>Final quantity</span><strong>14 m</strong></div></div>' : '<div class="showcase-card showcase-card-mint"><div class="showcase-top"><span>Plot model</span><code>sin(x)</code></div><div class="mini-chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="showcase-metrics"><span><b>128</b> samples</span><span><b>SVG</b> fallback</span><span><b>0 → 6.28</b> domain</span></div></div>');
 
     $visualGallery = '<section class="visual-gallery wrap"><div class="section-kicker">Visual catalogue</div><h2>One visual layer, many mathematical stories.</h2><p class="gallery-lead">Every card below is a renderer-neutral model with an SVG fallback. Feed the same representation to a web chart, a PDF export, an accessible text view, or your own renderer.</p><div class="visual-gallery-grid">'
         . '<article><div class="gallery-art gallery-line"><svg viewBox="0 0 240 90" role="img" aria-label="Sine line plot"><path d="M8 45 C30 5 52 5 74 45 S118 85 140 45 S184 5 206 45 S228 85 240 45"/></svg></div><strong>Line & function plots</strong><span>Sampled domains, gaps at undefined points, labels, and axes.</span><a href="?page=visuals-plots">Plot guide →</a></article>'
@@ -119,14 +124,14 @@ function renderPackage(string $package): string
 
     $whatItAdds = $explaining
         ? '<article><span class="feature-number">01</span><h3>A teaching layer</h3><p>Turn a single result into a sequence a learner can follow, with the operation, operands, translation key, and resulting value.</p></article><article><span class="feature-number">02</span><h3>Translations included</h3><p>Ship English or Danish copy from the same step model. Add your own catalogue without rewriting evaluation logic.</p></article><article><span class="feature-number">03</span><h3>Stable for products</h3><p>Attach observers to your UI, API, or audit log while the free core remains the source of truth.</p></article>'
-        : '<article><span class="feature-number">01</span><h3>Data before pixels</h3><p>Get samples, domains, labels, and metadata as plain models before choosing SVG, Canvas, or a chart library.</p></article><article><span class="feature-number">02</span><h3>More than plots</h3><p>Use the same contracts for matrices, equations, systems, calculus, roots, areas, and statistical summaries.</p></article><article><span class="feature-number">03</span><h3>Accessible fallback</h3><p>Render a useful SVG or image-ready data URI when a full frontend renderer is unavailable.</p></article>';
+        : ($units ? '<article><span class="feature-number">01</span><h3>Dimensions stay honest</h3><p>Length, mass, time, temperature, and angle are represented explicitly so adding metres to seconds fails clearly.</p></article><article><span class="feature-number">02</span><h3>Conversions at the edge</h3><p>Write familiar values such as 200cm; the engine converts to a base unit before combining compatible quantities.</p></article><article><span class="feature-number">03</span><h3>Composable output</h3><p>Serialize value, unit, dimensions, and a formatted label for the playground, APIs, or the explaining add-on.</p></article>' : '<article><span class="feature-number">01</span><h3>Data before pixels</h3><p>Get samples, domains, labels, and metadata as plain models before choosing SVG, Canvas, or a chart library.</p></article><article><span class="feature-number">02</span><h3>More than plots</h3><p>Use the same contracts for matrices, equations, systems, calculus, roots, areas, and statistical summaries.</p></article><article><span class="feature-number">03</span><h3>Accessible fallback</h3><p>Render a useful SVG or image-ready data URI when a full frontend renderer is unavailable.</p></article>');
 
     return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Private extension</div><h1>' . $title . '<br><em>' . e($name) . '</em></h1><p>' . $description . '</p></section>'
         . '<section class="package-detail wrap"><div class="package-detail-grid"><div><span class="package-label">' . e($name) . '</span><h2>Designed to load separately.</h2><p>Keep <code>mathphp/mathphp</code> small and stable. This package adds its own contracts, translations, and presentation models without changing the public evaluator.</p><ul class="package-list">' . $features . '</ul><a class="button button-primary" href="?page=pricing">Get access <span>↗</span></a></div><div>' . $showcase . $example . '<div class="package-callout"><strong>Private by distribution.</strong><span>Licensed customers receive read-only GitHub access and updates while their sponsorship or license is active.</span></div></div></div></section>'
         . '<section class="package-adds wrap"><div class="section-kicker">What it adds</div><div class="package-adds-grid">' . $whatItAdds . '</div></section>'
-        . '<section class="package-flow wrap"><div><div class="section-kicker">How it fits</div><h2>One core call.<br><em>One richer response.</em></h2></div><div class="flow-steps"><div><span>01</span><strong>Evaluate</strong><small>Core parses and validates the expression.</small></div><div><span>02</span><strong>Enrich</strong><small>' . ($explaining ? 'Explaining records each completed operation.' : 'Visuals turns the result into portable models.') . '</small></div><div><span>03</span><strong>Present</strong><small>Your application chooses the UI, language, and renderer.</small></div></div></section>'
-        . ($explaining ? '' : $visualGallery)
-        . '<section class="package-guides wrap"><div class="section-kicker">Feature guides</div><div class="package-guide-links">' . ($explaining ? '<a href="?page=explaining-steps"><strong>Step-by-step evaluation</strong><span>Build a lesson from each operation →</span></a><a href="?page=explaining-translations"><strong>Translations & observers</strong><span>Localize and instrument safely →</span></a><a href="?page=explaining-equations"><strong>Equation analyzer</strong><span>Explain unknowns and known values →</span></a><a href="?page=explaining-systems"><strong>System analyzer</strong><span>Describe linear constraints →</span></a><a href="?page=explaining-matrices"><strong>Matrix analyzer</strong><span>Inspect dimensions and values →</span></a><a href="?page=explaining-calculus"><strong>Calculus analyzer</strong><span>Derivatives and integrals →</span></a><a href="?page=explaining-area"><strong>Area, roots & statistics</strong><span>Numerical analysis models →</span></a>' : '<a href="?page=visuals-plots"><strong>Plots & sampling</strong><span>Turn formulas into portable data →</span></a><a href="?page=visuals-rendering"><strong>Rendering pipeline</strong><span>SVG, data URIs, and accessibility →</span></a><a href="?page=visuals-analysis"><strong>Analysis models</strong><span>Connect analyzer output to a view →</span></a>') . '</div></section>';
+        . '<section class="package-flow wrap"><div><div class="section-kicker">How it fits</div><h2>One core call.<br><em>One richer response.</em></h2></div><div class="flow-steps"><div><span>01</span><strong>Evaluate</strong><small>Core parses and validates the expression.</small></div><div><span>02</span><strong>Enrich</strong><small>' . ($explaining ? 'Explaining records each completed operation.' : ($units ? 'Units normalizes dimensions and conversions.' : 'Visuals turns the result into portable models.')) . '</small></div><div><span>03</span><strong>Present</strong><small>Your application chooses the UI, language, and renderer.</small></div></div></section>'
+        . ($explaining || $units ? '' : $visualGallery)
+        . '<section class="package-guides wrap"><div class="section-kicker">Feature guides</div><div class="package-guide-links">' . ($explaining ? '<a href="?page=explaining-steps"><strong>Step-by-step evaluation</strong><span>Build a lesson from each operation →</span></a><a href="?page=explaining-translations"><strong>Translations & observers</strong><span>Localize and instrument safely →</span></a><a href="?page=explaining-equations"><strong>Equation analyzer</strong><span>Explain unknowns and known values →</span></a><a href="?page=explaining-systems"><strong>System analyzer</strong><span>Describe linear constraints →</span></a><a href="?page=explaining-matrices"><strong>Matrix analyzer</strong><span>Inspect dimensions and values →</span></a><a href="?page=explaining-calculus"><strong>Calculus analyzer</strong><span>Derivatives and integrals →</span></a><a href="?page=explaining-area"><strong>Area, roots & statistics</strong><span>Numerical analysis models →</span></a>' : ($units ? '<a href="?page=units-guide"><strong>Unit grammar</strong><span>Write quantities and conversions →</span></a><a href="?page=units-guide"><strong>Dimensional arithmetic</strong><span>Rates, powers, and compatibility →</span></a><a href="?page=units-guide"><strong>Custom catalogs</strong><span>Register domain-specific symbols →</span></a>' : '<a href="?page=visuals-plots"><strong>Plots & sampling</strong><span>Turn formulas into portable data →</span></a><a href="?page=visuals-rendering"><strong>Rendering pipeline</strong><span>SVG, data URIs, and accessibility →</span></a><a href="?page=visuals-analysis"><strong>Analysis models</strong><span>Connect analyzer output to a view →</span></a>')) . '</div></section>';
 }
 
 function renderPricing(): string
@@ -144,6 +149,9 @@ function renderDocs(): string
 
 function renderGuide(string $guide): string
 {
+    if ($guide === 'units-guide') {
+        return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Units add-on</div><h1>Expressions with<br><em>something to measure.</em></h1><p>Use explicit quantities in metres, centimetres, mass, time, temperature, and angles. The add-on converts compatible values before arithmetic and rejects dimension mistakes.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><h2>Start with a quantity</h2><p>Install the private package, then evaluate the expression through <code>UnitMath</code>:</p><pre class="code-block"><code><span class="code-keyword">$quantity</span> = UnitMath::evaluate(<span class="code-string">\'2m * 6 + 200cm\'</span>);<br><span class="code-comment">// 14 m</span></code></pre><h2>Conversions happen before addition</h2><p><code>200cm</code> is normalized to two metres, so it can be added to <code>12m</code>. Adding <code>2m + 3s</code> fails with the stable <code>units.incompatible_addition</code> error instead of returning a meaningless number.</p><h2>Keep the model in your API</h2><p>A quantity serializes as its normalized numeric value, display unit, dimensions, and formatted label. Pass that object to the explaining add-on to produce translated unit steps, or to the visuals add-on for unit-labelled axes.</p><div class="guide-note"><strong>Scope:</strong><span>The core <code>mathphp/mathphp</code> package remains scalar-only. Units are an opt-in grammar and dependency.</span></div><a class="button button-primary" href="?page=units">See the package details <span>→</span></a></div></section>';
+    }
     $guides = [
         'getting-started' => ['Core guide', 'Getting started', 'Install the core package, make a safe evaluation, and understand where the rest of the guide fits.', '<h2>One dependency. One public call.</h2><p>MathPHP is designed to sit behind a form, rule editor, API, or pricing calculation. Start with the bounded core, then add the private layers only when your product needs them.</p><pre class="code-block"><code><span class="code-comment">// composer require mathphp/mathphp</span><br><span class="code-keyword">$total</span> = Math::evaluate(<span class="code-string">\'subtotal * (1 + tax)\'</span>, [<span class="code-string">\'subtotal\'</span> =&gt; 42.5, <span class="code-string">\'tax\'</span> =&gt; 0.2]);</code></pre><div class="guide-note"><strong>Next:</strong><span>Learn the <a href="?page=grammar">grammar</a>, then wire the <a href="?page=api">PHP API</a> into your application.</span></div>'],
         'grammar' => ['Core feature', 'Grammar & precedence', 'Build expressions people can read: numbers, variables, grouping, operators, and deliberate precedence.', '<h2>From text to a typed result.</h2><p>MathPHP accepts a small expression language and turns it into an immutable AST before evaluation. Multiplication binds tighter than addition, exponentiation is right-associative, and unary signs have explicit rules.</p><pre class="code-block"><code><span class="code-keyword">$result</span> = Math::evaluate(<span class="code-string">\'gross * (1 - discount)\'</span>, [<span class="code-string">\'gross\'</span> =&gt; 125, <span class="code-string">\'discount\'</span> =&gt; 0.2]);</code></pre><div class="guide-note"><strong>Try it:</strong><span><code>2^3^2</code> is <code>512</code>; <code>-2^2</code> is <code>-4</code>.</span></div>'],
@@ -255,6 +263,27 @@ function handleExplanationRequest(): never
     } catch (MathException $error) {
         $span = $error->span();
         echo json_encode(['ok' => false, 'code' => $error->errorCode(), 'message' => $error->getMessage(), 'span' => [$span->start, $span->end]], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
+function handleUnitsRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Units\\UnitMath')) {
+        echo json_encode(['ok' => false, 'code' => 'units.unavailable', 'message' => 'The private mathphp-units package is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $expression = is_array($payload) && is_string($payload['expression'] ?? null) ? $payload['expression'] : '';
+    $rawVariables = is_array($payload) && is_array($payload['variables'] ?? null) ? $payload['variables'] : [];
+    try {
+        $quantity = \MathPHP\Units\UnitMath::evaluate($expression, normalizeVariables($rawVariables));
+        echo json_encode(['ok' => true, 'quantity' => $quantity->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_variables', 'message' => $error->getMessage(), 'span' => [0, 0]], JSON_THROW_ON_ERROR);
+    } catch (\MathPHP\Units\UnitException $error) {
+        echo json_encode(['ok' => false, 'code' => $error->errorCode, 'message' => $error->getMessage(), 'span' => [$error->position, $error->position + 1]], JSON_THROW_ON_ERROR);
     }
     exit;
 }
@@ -431,6 +460,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'area', 'endpoint' => '?api=area', 'input' => 'expression, variable, interval, samples', 'visualKinds' => ['area-under-curve']],
         ['id' => 'root', 'endpoint' => '?api=root', 'input' => 'expression, variable, bracket', 'visualKinds' => ['root-convergence']],
         ['id' => 'statistics', 'endpoint' => '?api=statistics', 'input' => 'values, bins', 'visualKinds' => ['histogram']],
+        ['id' => 'units', 'endpoint' => '?api=units', 'input' => 'quantity expression, numeric variables', 'visualKinds' => []],
     ]], JSON_THROW_ON_ERROR);
     exit;
 }
@@ -440,6 +470,9 @@ if (($_GET['api'] ?? '') === 'evaluate') {
 }
 if (($_GET['api'] ?? '') === 'explain') {
     handleExplanationRequest();
+}
+if (($_GET['api'] ?? '') === 'units') {
+    handleUnitsRequest();
 }
 if (($_GET['api'] ?? '') === 'analyze') {
     handleEquationRequest();
@@ -470,11 +503,11 @@ if (($_GET['api'] ?? '') === 'capabilities') {
 }
 
 $page = $_GET['page'] ?? 'home';
-$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
-$page = in_array($page, array_merge(['home', 'packages', 'explaining', 'visuals', 'docs', 'playground', 'pricing'], $guidePages), true) ? $page : 'home';
+$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
+$page = in_array($page, array_merge(['home', 'packages', 'explaining', 'visuals', 'units', 'docs', 'playground', 'pricing'], $guidePages), true) ? $page : 'home';
 $content = match ($page) {
     'packages' => renderPackages(),
-    'explaining', 'visuals' => renderPackage($page),
+    'explaining', 'visuals', 'units' => renderPackage($page),
     'docs' => renderDocs(),
     'playground' => renderPlayground(),
     'pricing' => renderPricing(),
@@ -485,5 +518,5 @@ if (in_array($page, $guidePages, true)) {
     $content = renderGuide($page);
 }
 
-$activePage = $page === 'explaining' ? 'packages' : (in_array($page, $guidePages, true) ? 'docs' : $page);
+$activePage = $page === 'explaining' || $page === 'units' ? 'packages' : (in_array($page, $guidePages, true) ? 'docs' : $page);
 echo renderLayout(ucfirst($page), $content, $activePage);
