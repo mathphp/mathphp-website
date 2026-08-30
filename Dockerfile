@@ -7,7 +7,7 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --opt
 FROM composer:2
 
 WORKDIR /app
-ARG BUILD_ID=c27da18
+ARG BUILD_ID=units-refresh
 RUN echo "MathPHP website build ${BUILD_ID}"
 COPY --from=dependencies /build/vendor /app/vendor
 COPY public /app/public
