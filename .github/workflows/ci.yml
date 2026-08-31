@@ -22,6 +22,8 @@ jobs:
           tools: composer:v2
       - name: Validate Composer manifest
         run: composer validate --strict
+      - name: Verify the committed Composer lockfile
+        run: composer validate --strict --check-lock
       - name: Install locked core dependency
         run: composer install --prefer-dist --no-interaction --no-progress --no-dev
       - name: Check PHP syntax

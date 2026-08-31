@@ -1,0 +1,98 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "7b59c4247d6512a1ebd259fd92db6b5d",
+    "packages": [
+        {
+            "name": "mathphp/mathphp",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mathphp/mathphp.git",
+                "reference": "614870e407ed517267df85b48e6c5550535d8b1e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/614870e407ed517267df85b48e6c5550535d8b1e",
+                "reference": "614870e407ed517267df85b48e6c5550535d8b1e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.2",
+                "phpunit/phpunit": "^11.5",
+                "squizlabs/php_codesniffer": "^4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MathPHP\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "MathPHP\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "@php vendor/bin/phpunit --configuration phpunit.xml.dist"
+                ],
+                "syntax": [
+                    "@php tools/lint.php"
+                ],
+                "analyse": [
+                    "@php vendor/bin/phpstan analyse --configuration phpstan.neon.dist --no-progress"
+                ],
+                "style": [
+                    "@php vendor/bin/phpcs --standard=phpcs.xml.dist"
+                ],
+                "autoload:check": [
+                    "@composer dump-autoload --optimize --strict-psr --strict-ambiguous"
+                ],
+                "quality": [
+                    "@composer validate --strict",
+                    "@autoload:check",
+                    "@syntax",
+                    "@test",
+                    "@analyse",
+                    "@style"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A bounded, source-aware scalar expression evaluator for PHP",
+            "keywords": [
+                "expression",
+                "math",
+                "parser",
+                "safe-evaluation"
+            ],
+            "support": {
+                "source": "https://github.com/mathphp/mathphp/tree/main",
+                "issues": "https://github.com/mathphp/mathphp/issues"
+            },
+            "time": "2026-08-31T08:15:21+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "mathphp/mathphp": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "^8.2"
+    },
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

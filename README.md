@@ -33,6 +33,14 @@ Health keeps its existing boolean package fields for simple probes and adds
 runtime lockfiles (or Composer metadata for the core), so operators can match
 a response to a specific build without exposing credentials.
 
+The website commits its core `composer.lock`; Docker and CI therefore install
+the reviewed core revision instead of resolving `dev-main` at build time. For
+optional packages, `MATHPHP_PRIVATE_REPO_REF` selects a shared branch, tag, or
+commit fallback, while `MATHPHP_UNITS_REF`, `MATHPHP_VISUALS_REF`, and
+`MATHPHP_EXPLAINING_REF` can pin each add-on independently. Startup checks out
+the requested ref before installing dependencies, and the health/version
+responses expose the resolved revision.
+
 These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
 does not issue tokens or synchronize users.

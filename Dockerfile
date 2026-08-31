@@ -1,7 +1,7 @@
 FROM composer:2 AS dependencies
 
 WORKDIR /build
-COPY composer.json ./
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
 FROM composer:2
