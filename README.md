@@ -44,6 +44,9 @@ the requested ref before installing dependencies, and the health/version
 responses expose the resolved revision. Optional package roots also write a
 `.mathphp-revision` marker after checkout; this prevents a dependency lockfile
 from masking the actual add-on source revision running in the container.
+The Docker dependency stage also carries an explicit cache key tied to the
+reviewed Core revision, so a remote build cache cannot silently retain older
+Core vendor files after a lockfile update.
 
 These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
