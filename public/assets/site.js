@@ -55,6 +55,70 @@
   const locale = document.querySelector('#locale');
   const resultHeading = document.querySelector('#result-heading');
 
+  // Discover the runtime before enabling optional controls. This keeps a
+  // core-only deployment honest: users can still read the playground, but
+  // unavailable add-on actions are visibly disabled instead of failing only
+  // after a click.
+  const capabilityAvailability = new Map();
+  const capabilityAvailable = (id) => capabilityAvailability.get(id) !== false;
+  const capabilityLabel = (id) => ({
+    explain: 'the Explaining add-on',
+    'unit-explain': 'Explaining + Units add-ons',
+    equation: 'the Explaining add-on',
+    system: 'the Explaining add-on',
+    matrix: 'the Explaining add-on',
+    calculus: 'the Explaining add-on',
+    area: 'the Explaining add-on',
+    root: 'the Explaining add-on',
+    statistics: 'the Explaining add-on',
+    plot: 'the Visuals add-on',
+    units: 'the Units add-on',
+  }[id] || 'the selected package');
+  const setControlAvailability = (control, id) => {
+    if (!control) return;
+    const available = capabilityAvailable(id);
+    control.dataset.capability = id;
+    control.disabled = !available;
+    control.setAttribute('aria-disabled', String(!available));
+    control.title = available ? '' : `Unavailable: install ${capabilityLabel(id)}.`;
+  };
+  const refreshCapabilityControls = () => {
+    if (engine) {
+      [...engine.options].forEach((option) => {
+        const capability = option.value === 'core' ? 'evaluate' : option.value;
+        option.disabled = capability !== 'auto' && !capabilityAvailable(capability);
+      });
+    }
+    const activeEngine = selectedEngine();
+    setControlAvailability(button, activeEngine === 'units' ? 'units' : 'evaluate');
+    setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
+    setControlAvailability(analyzeButton, 'equation');
+    setControlAvailability(plotButton, 'plot');
+    setControlAvailability(systemButton, 'system');
+    setControlAvailability(derivativeButton, 'calculus');
+    setControlAvailability(integralButton, 'calculus');
+    setControlAvailability(areaButton, 'area');
+    setControlAvailability(rootButton, 'root');
+    setControlAvailability(matrixButton, 'matrix');
+  };
+
+  const loadCapabilities = async () => {
+    try {
+      const response = await fetch('?api=capabilities', { headers: { Accept: 'application/json' } });
+      const data = await response.json();
+      if (!Array.isArray(data.capabilities)) return;
+      data.capabilities.forEach((capability) => {
+        if (typeof capability.id === 'string' && typeof capability.available === 'boolean') {
+          capabilityAvailability.set(capability.id, capability.available);
+        }
+      });
+      refreshCapabilityControls();
+    } catch {
+      // Keep the optimistic defaults if discovery is unavailable; the API
+      // still returns its own explicit unavailable response on demand.
+    }
+  };
+
   // Plot controls keep the browser path aligned with the renderer-neutral API.
   const plotButtonRow = plotButton?.closest('.action-row');
   if (plotButtonRow && !document.querySelector('.plot-options')) {
@@ -122,7 +186,7 @@
     button.disabled = true;
     button.style.opacity = '.65';
     const parsed = readVariables();
-    if (!parsed.ok) { button.disabled = false; button.style.opacity = '1'; return; }
+    if (!parsed.ok) { refreshCapabilityControls(); button.style.opacity = '1'; return; }
 
     try {
       const activeEngine = selectedEngine();
@@ -148,7 +212,7 @@
       if (!isCurrentRequest(serial)) return;
       showResult('<strong>Could not reach the evaluator.</strong><span>Check that the local PHP server is running.</span>', 'result-error');
     } finally {
-      button.disabled = false;
+      refreshCapabilityControls();
       button.style.opacity = '1';
     }
   };
@@ -158,7 +222,7 @@
     explainButton.disabled = true;
     explainButton.style.opacity = '.65';
     const parsed = readVariables();
-    if (!parsed.ok) { explainButton.disabled = false; explainButton.style.opacity = '1'; return; }
+    if (!parsed.ok) { refreshCapabilityControls(); explainButton.style.opacity = '1'; return; }
 
     try {
       const activeEngine = selectedEngine();
@@ -188,7 +252,7 @@
       if (!isCurrentRequest(serial)) return;
       showResult('<strong>Could not reach the explanation service.</strong><span>Check that the private explaining package is installed.</span>', 'result-error');
     } finally {
-      explainButton.disabled = false;
+      refreshCapabilityControls();
       explainButton.style.opacity = '1';
     }
   };
@@ -209,7 +273,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique value yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Equation analysis">${steps}</ol>${visualDetails(analysis.visual)}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Equations');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the equation analyzer.</strong>', 'result-error'); }
-    finally { analyzeButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const plot = async () => {
@@ -231,7 +295,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${visual.svg}</div></div>`, 'result-explanation');
       setEngineMeta('MathPHP Visuals add-on');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
-    finally { plotButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const analyzeSystem = async () => {
@@ -248,7 +312,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique solution yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="System analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(visual, 'Matrix representation')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Systems');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the system analyzer.</strong>', 'result-error'); }
-    finally { systemButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const calculus = async (operation) => {
@@ -264,7 +328,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">${operation === 'integral' ? '∫' : '′'}</span><div><span class="explanation-label">${escapeHtml(analysis.operation)}</span><strong>${escapeHtml(analysis.result)}</strong><span class="explanation-hint">${escapeHtml(analysis.status)}</span></div></div><ol class="step-list" aria-label="Calculus steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Calculus visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Calculus');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the calculus analyzer.</strong>', 'result-error'); }
-    finally { control.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const area = async () => {
@@ -279,7 +343,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">∫</span><div><span class="explanation-label">signed area · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.area)}</strong><span class="explanation-hint">${escapeHtml(analysis.expression)} from ${escapeHtml(analysis.domain[0])} to ${escapeHtml(analysis.domain[1])}</span></div></div><ol class="step-list" aria-label="Area steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Area visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Area');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the area analyzer.</strong>', 'result-error'); }
-    finally { areaButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const findRoot = async () => {
@@ -294,7 +358,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">root · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.root ?? 'No certified root')}</strong><span class="explanation-hint">Bisection on [${escapeHtml(analysis.domain[0])}, ${escapeHtml(analysis.domain[1])}]</span></div></div><ol class="step-list" aria-label="Root steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Convergence visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Root');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the root analyzer.</strong>', 'result-error'); }
-    finally { rootButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   const analyzeMatrix = async () => {
@@ -312,7 +376,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">matrix · ${escapeHtml(analysis.status)}</span><strong>${values}</strong></div></div><ol class="step-list" aria-label="Matrix steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Matrix visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Matrix');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the matrix analyzer.</strong>', 'result-error'); }
-    finally { matrixButton.disabled = false; }
+    finally { refreshCapabilityControls(); }
   };
 
   button.addEventListener('click', run);
@@ -325,6 +389,10 @@
   areaButton.addEventListener('click', area);
   rootButton.addEventListener('click', findRoot);
   matrixButton.addEventListener('click', analyzeMatrix);
+  engine?.addEventListener('change', refreshCapabilityControls);
+  expression.addEventListener('input', refreshCapabilityControls);
   root.querySelectorAll('[data-example]').forEach((example) => example.addEventListener('click', () => { expression.value = example.dataset.example; run(); }));
   expression.addEventListener('keydown', (event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') run(); });
+  refreshCapabilityControls();
+  loadCapabilities();
 })();
