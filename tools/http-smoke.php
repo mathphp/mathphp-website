@@ -163,6 +163,19 @@ try {
         }
     }
 
+    $unitAliasChecks = [
+        'units multi-word alias' => ['expression' => '60 metres per second', 'formatted' => '60 mps'],
+        'units separator alias' => ['expression' => '1 mile per hour to km/h', 'formatted' => '1.609344 kmh'],
+    ];
+    foreach ($unitAliasChecks as $name => $definition) {
+        $response = requestJson($baseUrl, '/?api=units', ['expression' => $definition['expression'], 'variables' => []]);
+        if ($requireOptional) {
+            check(($response['body']['ok'] ?? false) === true && ($response['body']['quantity']['formatted'] ?? null) === $definition['formatted'], $name . ' responds with the canonical quantity');
+        } else {
+            check(($response['body']['ok'] ?? true) === false && ($response['body']['code'] ?? null) === 'units.unavailable', $name . ' reports an explicit unavailable state');
+        }
+    }
+
     echo $requireOptional ? "HTTP smoke suite passed (core + optional packages).\n" : "HTTP smoke suite passed (core-only mode).\n";
     exit(0);
 } catch (Throwable $error) {
