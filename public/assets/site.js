@@ -119,10 +119,21 @@
     if (!parsed.ok) { explainButton.disabled = false; explainButton.style.opacity = '1'; return; }
 
     try {
-      const response = await fetch('?api=explain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value, locale: locale.value }) });
+      const activeEngine = selectedEngine();
+      const endpoint = activeEngine === 'units' ? '?api=unit-explain' : '?api=explain';
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value, locale: locale.value }) });
       const data = await response.json();
       if (!data.ok) {
         showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error');
+        return;
+      }
+      if (activeEngine === 'units') {
+        const explanation = data.unitExplanation;
+        const steps = explanation.steps.map((step) => `<li><span class="step-index" aria-hidden="true">${step.id}</span><div class="step-copy"><code>${escapeHtml(step.expression)}</code><strong>${escapeHtml(step.message)}</strong><span class="step-detail">${escapeHtml(step.detail)}</span></div><strong class="step-result">${escapeHtml(step.result.formatted)}</strong></li>`).join('');
+        resultHeading.textContent = 'Unit steps';
+        showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">↗</span><div><span class="explanation-label">${escapeHtml(explanation.locale)} unit explanation</span><strong>${escapeHtml(explanation.result.formatted)}</strong><span class="explanation-hint">Each card shows the operation, conversion, and resulting quantity.</span></div></div><ol class="step-list" aria-label="Unit calculation steps">${steps}</ol></div>`, 'result-explanation');
+        const engineMeta = document.querySelector('#result-engine');
+        if (engineMeta) engineMeta.textContent = 'MathPHP Explaining + Units';
         return;
       }
       resultHeading.textContent = 'Step-by-step';

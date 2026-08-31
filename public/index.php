@@ -288,6 +288,29 @@ function handleUnitsRequest(): never
     exit;
 }
 
+function handleUnitExplanationRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\UnitExplainer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.units_unavailable', 'message' => 'The private mathphp-explaining package is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $expression = is_array($payload) && is_string($payload['expression'] ?? null) ? $payload['expression'] : '';
+    $rawVariables = is_array($payload) && is_array($payload['variables'] ?? null) ? $payload['variables'] : [];
+    $locale = is_array($payload) && is_string($payload['locale'] ?? null) ? $payload['locale'] : 'en';
+    try {
+        $explanation = (new \MathPHP\Explaining\UnitExplainer(\MathPHP\Explaining\Translation\Translations::create($locale)))
+            ->explain($expression, normalizeVariables($rawVariables));
+        echo json_encode(['ok' => true, 'unitExplanation' => $explanation->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_variables', 'message' => $error->getMessage(), 'span' => [0, 0]], JSON_THROW_ON_ERROR);
+    } catch (\MathPHP\Units\UnitException $error) {
+        echo json_encode(['ok' => false, 'code' => $error->errorCode, 'message' => $error->getMessage(), 'span' => [$error->position, $error->position + 1]], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleEquationRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -473,6 +496,9 @@ if (($_GET['api'] ?? '') === 'explain') {
 }
 if (($_GET['api'] ?? '') === 'units') {
     handleUnitsRequest();
+}
+if (($_GET['api'] ?? '') === 'unit-explain') {
+    handleUnitExplanationRequest();
 }
 if (($_GET['api'] ?? '') === 'analyze') {
     handleEquationRequest();
