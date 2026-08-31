@@ -33,3 +33,17 @@ a response to a specific build without exposing credentials.
 These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
 does not issue tokens or synchronize users.
+
+## HTTP smoke checks
+
+Run the dependency-free contract probe against a local server:
+
+```sh
+php -S 127.0.0.1:8080 -t public
+php tools/http-smoke.php
+```
+
+The default core-only mode expects explicit `*.unavailable` responses for
+private add-ons. To verify a deployment where all optional packages are
+installed, set `MATHPHP_SMOKE_REQUIRE_OPTIONAL=1`; the same script then checks
+Units, Explaining, and Visuals success payloads.

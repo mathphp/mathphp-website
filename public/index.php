@@ -569,7 +569,8 @@ function handleMatrixRequest(): never
 function handleCapabilitiesRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => true, 'version' => '0.1', 'capabilities' => [
+    echo json_encode(['ok' => true, 'version' => WEBSITE_API_VERSION, 'capabilities' => [
+        ['id' => 'evaluate', 'endpoint' => '?api=evaluate', 'input' => 'expression, variables', 'visualKinds' => []],
         ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph']],
         ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system']],

@@ -30,3 +30,18 @@ jobs:
         run: node --check public/assets/site.js
       - name: Check container entrypoint syntax
         run: sh -n docker-entrypoint.sh
+      - name: Start local HTTP smoke server
+        run: |
+          php -S 127.0.0.1:8080 -t public > /tmp/mathphp-smoke-server.log 2>&1 &
+          echo $! > /tmp/mathphp-smoke-server.pid
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent 'http://127.0.0.1:8080/?api=health' > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mathphp-smoke-server.log
+          exit 1
+      - name: Run HTTP smoke suite
+        run: php tools/http-smoke.php
+      - name: Stop local HTTP smoke server
+        if: always()
+        run: kill "$(cat /tmp/mathphp-smoke-server.pid)" 2>/dev/null || true
