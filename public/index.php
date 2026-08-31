@@ -402,7 +402,7 @@ function handleEquationRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
     if (!class_exists('MathPHP\\Explaining\\EquationAnalyzer')) {
-        echo json_encode(['ok' => false, 'code' => 'visuals.unavailable', 'message' => 'The private mathphp-visuals package is not installed.'], JSON_THROW_ON_ERROR);
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The private mathphp-explaining package is not installed.'], JSON_THROW_ON_ERROR);
         exit;
     }
     $payload = json_decode((string) file_get_contents('php://input'), true);

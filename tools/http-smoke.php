@@ -71,7 +71,7 @@ try {
 
     $capabilities = requestJson($baseUrl, '/?api=capabilities');
     $capabilityIds = array_column($capabilities['body']['capabilities'] ?? [], 'id');
-    foreach (['evaluate', 'units', 'unit-explain', 'plot'] as $id) {
+    foreach (['evaluate', 'explain', 'equation', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain'] as $id) {
         check(in_array($id, $capabilityIds, true), 'capabilities lists ' . $id);
     }
 
@@ -82,6 +82,14 @@ try {
     check(($error['body']['ok'] ?? true) === false && is_string($error['body']['code'] ?? null), 'core returns a structured arithmetic error');
 
     $optionalChecks = [
+        'explain' => ['path' => '/?api=explain', 'payload' => ['expression' => '(5*2)*2', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['explanation']['result'] ?? null) === 20 && count($body['explanation']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
+        'equation' => ['path' => '/?api=analyze', 'payload' => ['equation' => '1*x^2 + 0*x + 1 = 5', 'known' => []], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && count($body['analysis']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
+        'system' => ['path' => '/?api=system', 'payload' => ['system' => '2*x + 3*y = 8; 1*x - 1*y = 1'], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && count($body['analysis']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
+        'matrix' => ['path' => '/?api=matrix', 'payload' => ['matrix' => [[1, 2], [3, 4]]], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && isset($body['analysis']['result']['determinant']), 'unavailable' => 'explain.unavailable'],
+        'calculus' => ['path' => '/?api=calculus', 'payload' => ['operation' => 'derivative', 'expression' => 'x^2 + 3*x', 'variable' => 'x'], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['result'] ?? null) === '2x + 3', 'unavailable' => 'explain.unavailable'],
+        'area' => ['path' => '/?api=area', 'payload' => ['expression' => 'x^2', 'variable' => 'x', 'minimum' => 0, 'maximum' => 1, 'samples' => 21], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && is_numeric($body['analysis']['area'] ?? null), 'unavailable' => 'explain.unavailable'],
+        'root' => ['path' => '/?api=root', 'payload' => ['expression' => 'x^2 - 2', 'variable' => 'x', 'minimum' => 0, 'maximum' => 2, 'iterations' => 20], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && is_numeric($body['analysis']['root'] ?? null), 'unavailable' => 'explain.unavailable'],
+        'statistics' => ['path' => '/?api=statistics', 'payload' => ['values' => [1, 2, 2, 3, 10], 'bins' => 4], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['summary']['count'] ?? null) === 5, 'unavailable' => 'explain.unavailable'],
         'units' => ['path' => '/?api=units', 'payload' => ['expression' => '2m * 6 + 200cm', 'variables' => []], 'success' => static fn (array $body): bool => ($body['quantity']['formatted'] ?? null) === '14 m', 'unavailable' => 'units.unavailable'],
         'unit-explain' => ['path' => '/?api=unit-explain', 'payload' => ['expression' => '25m to km', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['unitExplanation']['result']['formatted'] ?? null) === '0.025 km', 'unavailable' => 'explain.units_unavailable'],
         'visuals' => ['path' => '/?api=plot', 'payload' => ['expression' => 'sin(x)', 'variable' => 'x', 'minimum' => 0, 'maximum' => 6.28, 'samples' => 9, 'variables' => []], 'success' => static fn (array $body): bool => ($body['visual']['kind'] ?? null) === 'line-plot', 'unavailable' => 'visuals.unavailable'],
