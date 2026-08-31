@@ -133,9 +133,34 @@
 
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
+  // Visuals are returned as SVG markup by our own renderer, but keep this
+  // boundary defensive so a future renderer or dependency cannot introduce
+  // scripts, event handlers, navigation, or embedded documents into results.
+  const sanitizeSvg = (value) => {
+    const template = document.createElement('template');
+    template.innerHTML = String(value ?? '');
+    const svg = template.content.querySelector('svg');
+    if (!svg) return '';
+    const blockedTags = new Set(['script', 'foreignobject', 'iframe', 'object', 'embed', 'style', 'link']);
+    [svg, ...svg.querySelectorAll('*')].forEach((element) => {
+      if (blockedTags.has(element.tagName.toLowerCase())) {
+        element.remove();
+        return;
+      }
+      [...element.attributes].forEach((attribute) => {
+        const name = attribute.name.toLowerCase();
+        const valueText = attribute.value.trim().toLowerCase();
+        if (name.startsWith('on') || name === 'style' || name === 'src' || name === 'href' || name === 'xlink:href' || valueText.includes('javascript:') || valueText.includes('data:text/html')) {
+          element.removeAttribute(attribute.name);
+        }
+      });
+    });
+    return svg.outerHTML;
+  };
+
   const visualDetails = (visual, summary = 'Visual representation') => {
     if (!visual) return '<p class="visual-unavailable">This analysis has no visual model for the supplied input.</p>';
-    return `<details class="visual-details" open><summary>${escapeHtml(summary)}</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${visual.svg}</div></details>`;
+    return `<details class="visual-details" open><summary>${escapeHtml(summary)}</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${sanitizeSvg(visual.svg)}</div></details>`;
   };
 
   const showResult = (html, className) => {
@@ -206,7 +231,8 @@
         }
         setEngineMeta(activeEngine === 'units' ? 'MathPHP Units add-on' : 'MathPHP Core');
       } else {
-        showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p><code>source span: ${data.span[0]}–${data.span[1]}</code>`, 'result-error');
+        const span = Array.isArray(data.span) && data.span.length >= 2 ? `${data.span[0]}–${data.span[1]}` : 'not provided';
+        showResult(`<strong>${escapeHtml(data.code || 'evaluation.error')}</strong><p>${escapeHtml(data.message || 'The expression could not be evaluated.')}</p><code>source span: ${escapeHtml(span)}</code>`, 'result-error');
       }
     } catch {
       if (!isCurrentRequest(serial)) return;
@@ -292,7 +318,7 @@
       if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const visual = data.visual;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${visual.svg}</div></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${sanitizeSvg(visual.svg)}</div></div>`, 'result-explanation');
       setEngineMeta('MathPHP Visuals add-on');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
     finally { refreshCapabilityControls(); }

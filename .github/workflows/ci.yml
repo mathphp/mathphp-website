@@ -30,6 +30,8 @@ jobs:
         run: php -l public/index.php
       - name: Check browser script syntax
         run: node --check public/assets/site.js
+      - name: Check browser rendering contract
+        run: php tools/site-js-contract.php
       - name: Check container entrypoint syntax
         run: sh -n docker-entrypoint.sh
       - name: Start local HTTP smoke server

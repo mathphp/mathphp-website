@@ -45,6 +45,14 @@ These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
 does not issue tokens or synchronize users.
 
+The Playground escapes all API-provided text before inserting it into the
+result panel. SVG returned by the private Visuals renderer passes through a
+small client-side sanitizer that removes scripts, event handlers, navigation,
+and embedded-document elements before rendering.
+
+CI also runs `tools/site-js-contract.php` as a dependency-free regression guard
+for those browser rendering boundaries.
+
 ## HTTP smoke checks
 
 Run the dependency-free contract probe against a local server:
