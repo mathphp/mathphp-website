@@ -153,6 +153,7 @@ try {
     $unitErrorChecks = [
         'units incompatibility diagnostics' => ['payload' => ['expression' => '2m + 3s', 'variables' => []], 'code' => 'units.incompatible_addition', 'span' => [3, 4]],
         'units conversion diagnostics' => ['payload' => ['expression' => '25m to s', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [7, 8]],
+        'units affine scaling diagnostics' => ['payload' => ['expression' => '20C * 2', 'variables' => []], 'code' => 'units.affine_operation', 'span' => [4, 5]],
     ];
     foreach ($unitErrorChecks as $name => $definition) {
         $response = requestJson($baseUrl, '/?api=units', $definition['payload']);
