@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  website:
+    name: Website checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+      - name: Validate Composer manifest
+        run: composer validate --strict
+      - name: Install locked core dependency
+        run: composer install --prefer-dist --no-interaction --no-progress --no-dev
+      - name: Check PHP syntax
+        run: php -l public/index.php
+      - name: Check browser script syntax
+        run: node --check public/assets/site.js
+      - name: Check container entrypoint syntax
+        run: sh -n docker-entrypoint.sh
