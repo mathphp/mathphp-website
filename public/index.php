@@ -22,6 +22,8 @@ if (is_file($explainingAutoload)) {
 use MathPHP\Math;
 use MathPHP\Exception\MathException;
 
+const WEBSITE_API_VERSION = '0.1';
+
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -38,6 +40,87 @@ function formatResult(int|float $result): string
     return str_contains($formatted, '.')
         ? rtrim(rtrim($formatted, '0'), '.')
         : $formatted;
+}
+
+/**
+ * Return the resolved version and source revision for one runtime package.
+ * Lockfiles are preferred because optional packages have independent vendor
+ * trees; Composer's InstalledVersions is the fallback for the public core.
+ *
+ * @return array{version:string|null,reference:string|null}
+ */
+function runtimePackageMetadata(string $package, string $lockPath, bool $available): array
+{
+    if (!$available) {
+        return ['version' => null, 'reference' => null];
+    }
+
+    if (is_file($lockPath)) {
+        $contents = file_get_contents($lockPath);
+        if ($contents !== false) {
+            try {
+                $lock = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+                foreach (['packages', 'packages-dev'] as $section) {
+                    foreach (($lock[$section] ?? []) as $installed) {
+                        if (!is_array($installed) || ($installed['name'] ?? null) !== $package) {
+                            continue;
+                        }
+
+                        $source = is_array($installed['source'] ?? null) ? $installed['source'] : [];
+                        $dist = is_array($installed['dist'] ?? null) ? $installed['dist'] : [];
+                        $reference = $source['reference'] ?? $dist['reference'] ?? null;
+
+                        return [
+                            'version' => is_string($installed['version'] ?? null) ? $installed['version'] : null,
+                            'reference' => is_string($reference) ? $reference : null,
+                        ];
+                    }
+                }
+            } catch (JsonException) {
+                // Fall through to Composer's installed package metadata.
+            }
+        }
+    }
+
+    if (class_exists('Composer\\InstalledVersions')) {
+        try {
+            if (\Composer\InstalledVersions::isInstalled($package)) {
+                return [
+                    'version' => \Composer\InstalledVersions::getPrettyVersion($package),
+                    'reference' => \Composer\InstalledVersions::getReference($package),
+                ];
+            }
+        } catch (Throwable) {
+            // A partial optional install should not make health checks fail.
+        }
+    }
+
+    return ['version' => null, 'reference' => null];
+}
+
+/**
+ * @return array{core:bool,optional:array{units:bool,explaining:bool,visuals:bool},versions:array{core:array{version:string|null,reference:string|null},units:array{version:string|null,reference:string|null},explaining:array{version:string|null,reference:string|null},visuals:array{version:string|null,reference:string|null}}}
+ */
+function runtimePackageState(): array
+{
+    $root = dirname(__DIR__);
+    $core = class_exists('MathPHP\\Math');
+    $optional = [
+        'units' => class_exists('MathPHP\\Units\\UnitMath'),
+        'explaining' => class_exists('MathPHP\\Explaining\\Explainer'),
+        'visuals' => class_exists('MathPHP\\Visuals\\Plotter'),
+    ];
+
+    return [
+        'core' => $core,
+        'optional' => $optional,
+        'versions' => [
+            'core' => runtimePackageMetadata('mathphp/mathphp', $root . '/composer.lock', $core),
+            'units' => runtimePackageMetadata('mathphp/mathphp-units', $root . '/private/mathphp-units/composer.lock', $optional['units']),
+            'explaining' => runtimePackageMetadata('mathphp/mathphp-explaining', $root . '/private/mathphp-explaining/composer.lock', $optional['explaining']),
+            'visuals' => runtimePackageMetadata('mathphp/mathphp-visuals', $root . '/private/mathphp-visuals/composer.lock', $optional['visuals']),
+        ],
+    ];
 }
 
 function renderLayout(string $title, string $content, string $active): string
@@ -505,20 +588,31 @@ function handleCapabilitiesRequest(): never
 function handleHealthRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
-    $core = class_exists('MathPHP\\Math');
-    $optional = [
-        'units' => class_exists('MathPHP\\Units\\UnitMath'),
-        'explaining' => class_exists('MathPHP\\Explaining\\Explainer'),
-        'visuals' => class_exists('MathPHP\\Visuals\\Plotter'),
-    ];
+    $state = runtimePackageState();
+    $core = $state['core'];
     if (!$core) {
         http_response_code(503);
     }
     echo json_encode([
         'ok' => $core,
         'status' => $core ? 'ok' : 'degraded',
-        'version' => '0.1',
-        'packages' => ['core' => $core, 'optional' => $optional],
+        'version' => WEBSITE_API_VERSION,
+        'php' => PHP_VERSION,
+        'packages' => ['core' => $core, 'optional' => $state['optional']],
+        'packageVersions' => $state['versions'],
+    ], JSON_THROW_ON_ERROR);
+    exit;
+}
+
+function handleVersionRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    $state = runtimePackageState();
+    echo json_encode([
+        'ok' => true,
+        'version' => WEBSITE_API_VERSION,
+        'php' => PHP_VERSION,
+        'packages' => $state['versions'],
     ], JSON_THROW_ON_ERROR);
     exit;
 }
@@ -564,6 +658,9 @@ if (($_GET['api'] ?? '') === 'capabilities') {
 }
 if (($_GET['api'] ?? '') === 'health') {
     handleHealthRequest();
+}
+if (($_GET['api'] ?? '') === 'version') {
+    handleVersionRequest();
 }
 
 $page = $_GET['page'] ?? 'home';

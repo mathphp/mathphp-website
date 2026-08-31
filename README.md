@@ -22,7 +22,13 @@ core evaluator remain usable.
 ## Operational endpoints
 
 - `GET /?api=health` reports core readiness and which optional packages are loaded.
+- `GET /?api=version` reports the API/PHP versions and resolved package revisions.
 - `GET /?api=capabilities` lists the evaluator and add-on endpoints available to a client.
+
+Health keeps its existing boolean package fields for simple probes and adds
+`packageVersions` for release diagnostics. Version data is read from the
+runtime lockfiles (or Composer metadata for the core), so operators can match
+a response to a specific build without exposing credentials.
 
 These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
