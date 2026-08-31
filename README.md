@@ -3,6 +3,8 @@
 This is the public-facing companion site for MathPHP: a landing page, a concise reference, and an interactive evaluator demo.
 
 It intentionally uses the existing PHP package directly instead of duplicating evaluator logic in a separate service.
+Website CI checks both the minimum supported PHP 8.2 runtime and the PHP 8.5
+runtime used by production.
 
 ## Run locally
 
