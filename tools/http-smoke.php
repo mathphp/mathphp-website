@@ -99,6 +99,18 @@ try {
     foreach (['evaluate', 'explain', 'equation', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain'] as $id) {
         check(in_array($id, $capabilityIds, true), 'capabilities lists ' . $id);
     }
+    $capabilityAvailability = [];
+    foreach ($capabilities['body']['capabilities'] ?? [] as $capability) {
+        if (is_array($capability) && is_string($capability['id'] ?? null)) {
+            $capabilityAvailability[$capability['id']] = $capability['available'] ?? null;
+            check(is_bool($capability['available'] ?? null), 'capabilities reports availability for ' . $capability['id']);
+            check(is_array($capability['requiredPackages'] ?? null) && count($capability['requiredPackages']) > 0, 'capabilities reports package requirements for ' . $capability['id']);
+        }
+    }
+    check(($capabilityAvailability['evaluate'] ?? false) === true, 'core evaluate capability is available');
+    foreach (['explain', 'equation', 'system', 'matrix', 'calculus', 'area', 'root', 'statistics', 'units', 'unit-explain', 'plot'] as $id) {
+        check(($capabilityAvailability[$id] ?? true) === $requireOptional, 'optional capability availability matches runtime for ' . $id);
+    }
 
     $pageChecks = [
         '/' => 'Mathematics for PHP',

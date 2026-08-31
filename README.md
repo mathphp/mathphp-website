@@ -23,7 +23,10 @@ core evaluator remain usable.
 
 - `GET /?api=health` reports core readiness and which optional packages are loaded.
 - `GET /?api=version` reports the API/PHP versions and resolved package revisions.
-- `GET /?api=capabilities` lists the evaluator and add-on endpoints available to a client.
+- `GET /?api=capabilities` lists the evaluator and add-on endpoints. Each entry keeps
+  its stable `id` and includes `available` plus `requiredPackages`, so a client can
+  distinguish an installed optional add-on from an endpoint that will return an
+  explicit `*.unavailable` response.
 
 Health keeps its existing boolean package fields for simple probes and adds
 `packageVersions` for release diagnostics. Version data is read from the

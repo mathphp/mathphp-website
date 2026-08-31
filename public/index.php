@@ -571,20 +571,22 @@ function handleMatrixRequest(): never
 function handleCapabilitiesRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => true, 'version' => WEBSITE_API_VERSION, 'capabilities' => [
-        ['id' => 'evaluate', 'endpoint' => '?api=evaluate', 'input' => 'expression, variables', 'visualKinds' => []],
-        ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph']],
-        ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow']],
-        ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system']],
-        ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap']],
-        ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral']],
-        ['id' => 'plot', 'endpoint' => '?api=plot', 'input' => 'expression, variable, domain, samples, optional xUnit/yUnit labels', 'visualKinds' => ['line-plot']],
-        ['id' => 'area', 'endpoint' => '?api=area', 'input' => 'expression, variable, interval, samples', 'visualKinds' => ['area-under-curve']],
-        ['id' => 'root', 'endpoint' => '?api=root', 'input' => 'expression, variable, bracket', 'visualKinds' => ['root-convergence']],
-        ['id' => 'statistics', 'endpoint' => '?api=statistics', 'input' => 'values, bins', 'visualKinds' => ['histogram']],
-        ['id' => 'units', 'endpoint' => '?api=units', 'input' => 'quantity expression, numeric variables', 'visualKinds' => []],
-        ['id' => 'unit-explain', 'endpoint' => '?api=unit-explain', 'input' => 'quantity expression, numeric variables, locale', 'visualKinds' => []],
-    ]], JSON_THROW_ON_ERROR);
+    $state = runtimePackageState();
+    $capabilities = [
+        ['id' => 'evaluate', 'endpoint' => '?api=evaluate', 'input' => 'expression, variables', 'visualKinds' => [], 'requiredPackages' => ['core'], 'available' => $state['core']],
+        ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'plot', 'endpoint' => '?api=plot', 'input' => 'expression, variable, domain, samples, optional xUnit/yUnit labels', 'visualKinds' => ['line-plot'], 'requiredPackages' => ['core', 'visuals'], 'available' => $state['core'] && $state['optional']['visuals']],
+        ['id' => 'area', 'endpoint' => '?api=area', 'input' => 'expression, variable, interval, samples', 'visualKinds' => ['area-under-curve'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'root', 'endpoint' => '?api=root', 'input' => 'expression, variable, bracket', 'visualKinds' => ['root-convergence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'statistics', 'endpoint' => '?api=statistics', 'input' => 'values, bins', 'visualKinds' => ['histogram'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'units', 'endpoint' => '?api=units', 'input' => 'quantity expression, numeric variables', 'visualKinds' => [], 'requiredPackages' => ['core', 'units'], 'available' => $state['core'] && $state['optional']['units']],
+        ['id' => 'unit-explain', 'endpoint' => '?api=unit-explain', 'input' => 'quantity expression, numeric variables, locale', 'visualKinds' => [], 'requiredPackages' => ['core', 'explaining', 'units'], 'available' => $state['core'] && $state['optional']['explaining'] && $state['optional']['units']],
+    ];
+    echo json_encode(['ok' => true, 'version' => WEBSITE_API_VERSION, 'capabilities' => $capabilities], JSON_THROW_ON_ERROR);
     exit;
 }
 
