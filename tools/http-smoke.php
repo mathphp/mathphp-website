@@ -161,6 +161,7 @@ try {
         'root' => ['path' => '/?api=root', 'payload' => ['expression' => 'x^2 - 2', 'variable' => 'x', 'minimum' => 0, 'maximum' => 2, 'iterations' => 20], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && is_numeric($body['analysis']['root'] ?? null), 'unavailable' => 'explain.unavailable'],
         'statistics' => ['path' => '/?api=statistics', 'payload' => ['values' => [1, 2, 2, 3, 10], 'bins' => 4], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['summary']['count'] ?? null) === 5, 'unavailable' => 'explain.unavailable'],
         'units' => ['path' => '/?api=units', 'payload' => ['expression' => '2m * 6 + 200cm', 'variables' => []], 'success' => static fn (array $body): bool => ($body['quantity']['formatted'] ?? null) === '14 m' && (float) ($body['quantity']['displayValue'] ?? NAN) === 14.0, 'unavailable' => 'units.unavailable'],
+        'units signed temperature' => ['path' => '/?api=units', 'payload' => ['expression' => '-20C to F', 'variables' => []], 'success' => static fn (array $body): bool => ($body['quantity']['formatted'] ?? null) === '-4 F', 'unavailable' => 'units.unavailable'],
         'unit-explain' => ['path' => '/?api=unit-explain', 'payload' => ['expression' => '25m to km', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['unitExplanation']['result']['formatted'] ?? null) === '0.025 km' && abs((float) ($body['unitExplanation']['result']['displayValue'] ?? NAN) - 0.025) < 0.0000001, 'unavailable' => 'explain.units_unavailable'],
         'visuals' => ['path' => '/?api=plot', 'payload' => ['expression' => 'sin(x)', 'variable' => 'x', 'minimum' => 0, 'maximum' => 6.28, 'samples' => 9, 'variables' => []], 'success' => static fn (array $body): bool => ($body['visual']['kind'] ?? null) === 'line-plot', 'unavailable' => 'visuals.unavailable'],
     ];
@@ -195,6 +196,9 @@ try {
         'units conversion diagnostics' => ['payload' => ['expression' => '25m to s', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [7, 8]],
         'units affine scaling diagnostics' => ['payload' => ['expression' => '20C * 2', 'variables' => []], 'code' => 'units.affine_operation', 'span' => [4, 5]],
         'units zero negative power diagnostics' => ['payload' => ['expression' => '0m ^ -1', 'variables' => []], 'code' => 'units.division_by_zero', 'span' => [3, 4]],
+        'units non-finite literal diagnostics' => ['payload' => ['expression' => '1e309', 'variables' => []], 'code' => 'units.non_finite_number', 'span' => [0, 1]],
+        'units non-finite result diagnostics' => ['payload' => ['expression' => '1e308 * 10', 'variables' => []], 'code' => 'units.non_finite_result', 'span' => [6, 7]],
+        'units conversion keyword diagnostics' => ['payload' => ['expression' => '1 to m', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [5, 6]],
     ];
     foreach ($unitErrorChecks as $name => $definition) {
         $response = requestJson($baseUrl, '/?api=units', $definition['payload']);
