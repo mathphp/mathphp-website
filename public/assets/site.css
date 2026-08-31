@@ -88,3 +88,4 @@ body{background:radial-gradient(900px 500px at 82% -10%,rgba(113,64,220,.18),tra
 .plot-options input{width:100%;padding:8px 9px;border:1px solid #343958;border-radius:3px;background:#0b0e1b;color:#eeeafa;font:12px var(--mono);outline:none}
 .plot-options input:focus{border-color:#8d5cff;box-shadow:0 0 0 2px rgba(141,92,255,.16)}
 @media(max-width:560px){.plot-options{grid-template-columns:1fr;margin-top:14px}.plot-options legend{grid-column:1}.plot-options label{font-size:9px}}
+.visual-unavailable{margin-top:18px;padding:12px;border:1px dashed #89958d;border-radius:4px;color:var(--muted);font-size:12px}

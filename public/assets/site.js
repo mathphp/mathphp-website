@@ -69,6 +69,11 @@
 
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
+  const visualDetails = (visual, summary = 'Visual representation') => {
+    if (!visual) return '<p class="visual-unavailable">This analysis has no visual model for the supplied input.</p>';
+    return `<details class="visual-details" open><summary>${escapeHtml(summary)}</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${visual.svg}</div></details>`;
+  };
+
   const showResult = (html, className) => {
     result.className = className;
     result.innerHTML = html;
@@ -83,9 +88,13 @@
 
   const readVariables = () => {
     try {
-      return { ok: true, value: JSON.parse(variables.value || '{}') };
+      const value = JSON.parse(variables.value || '{}');
+      if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('not an object');
+      const invalid = Object.entries(value).some(([name, item]) => name.trim() === '' || (typeof item !== 'number') || !Number.isFinite(item));
+      if (invalid) throw new Error('not numeric');
+      return { ok: true, value };
     } catch {
-      showResult('<strong>Variables must be valid JSON.</strong><span>Use an object such as {"subtotal": 42.5}.</span>', 'result-error');
+      showResult('<strong>Variables must be a JSON object of finite numbers.</strong><span>Use an object such as {"subtotal": 42.5}.</span>', 'result-error');
       return { ok: false };
     }
   };
@@ -151,7 +160,7 @@
       resultHeading.textContent = 'Step-by-step';
       const steps = data.explanation.steps.map((step) => `<li><span class="step-index" aria-hidden="true">${step.id}</span><div class="step-copy"><code>${escapeHtml(step.expression)}</code><strong>${escapeHtml(step.message)}</strong><span class="step-detail">${escapeHtml(step.detail)}</span></div><strong class="step-result">${escapeHtml(step.result)}</strong></li>`).join('');
       const visual = data.explanation.visual;
-      const visualMarkup = visual ? `<details class="visual-details"><summary>Visual representation</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${visual.svg}</div></details>` : '';
+      const visualMarkup = visualDetails(visual);
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">✦</span><div><span class="explanation-label">${escapeHtml(data.explanation.locale)} explanation</span><strong>${escapeHtml(data.explanation.result)}</strong><span class="explanation-hint">Each card shows the rule, the substitution, and the result.</span></div></div><ol class="step-list" aria-label="Calculation steps">${steps}</ol>${visualMarkup}</div>`, 'result-explanation');
     } catch {
       showResult('<strong>Could not reach the explanation service.</strong><span>Check that the private explaining package is installed.</span>', 'result-error');
@@ -172,7 +181,7 @@
       const analysis = data.analysis;
       const steps = analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique value yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Equation analysis">${steps}</ol><details class="visual-details" open><summary>Visual representation</summary><p>${escapeHtml(analysis.visual.description)}</p><div class="visual-preview">${analysis.visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique value yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Equation analysis">${steps}</ol>${visualDetails(analysis.visual)}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the equation analyzer.</strong>', 'result-error'); }
     finally { analyzeButton.disabled = false; }
   };
@@ -205,7 +214,7 @@
       const analysis = data.analysis;
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
       const visual = analysis.visual;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique solution yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="System analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="visual-details" open><summary>Matrix representation</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique solution yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="System analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(visual, 'Matrix representation')}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the system analyzer.</strong>', 'result-error'); }
     finally { systemButton.disabled = false; }
   };
@@ -218,7 +227,7 @@
       const data = await response.json();
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">${operation === 'integral' ? '∫' : '′'}</span><div><span class="explanation-label">${escapeHtml(analysis.operation)}</span><strong>${escapeHtml(analysis.result)}</strong><span class="explanation-hint">${escapeHtml(analysis.status)}</span></div></div><ol class="step-list" aria-label="Calculus steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="visual-details" open><summary>Calculus visual</summary><p>${escapeHtml(analysis.visual.description)}</p><div class="visual-preview">${analysis.visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">${operation === 'integral' ? '∫' : '′'}</span><div><span class="explanation-label">${escapeHtml(analysis.operation)}</span><strong>${escapeHtml(analysis.result)}</strong><span class="explanation-hint">${escapeHtml(analysis.status)}</span></div></div><ol class="step-list" aria-label="Calculus steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Calculus visual')}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the calculus analyzer.</strong>', 'result-error'); }
     finally { control.disabled = false; }
   };
@@ -230,7 +239,7 @@
       const data = await response.json();
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">∫</span><div><span class="explanation-label">signed area · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.area)}</strong><span class="explanation-hint">${escapeHtml(analysis.expression)} from ${escapeHtml(analysis.domain[0])} to ${escapeHtml(analysis.domain[1])}</span></div></div><ol class="step-list" aria-label="Area steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="visual-details" open><summary>Area visual</summary><p>${escapeHtml(analysis.visual.description)}</p><div class="visual-preview">${analysis.visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">∫</span><div><span class="explanation-label">signed area · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.area)}</strong><span class="explanation-hint">${escapeHtml(analysis.expression)} from ${escapeHtml(analysis.domain[0])} to ${escapeHtml(analysis.domain[1])}</span></div></div><ol class="step-list" aria-label="Area steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Area visual')}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the area analyzer.</strong>', 'result-error'); }
     finally { areaButton.disabled = false; }
   };
@@ -242,7 +251,7 @@
       const data = await response.json();
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">root · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.root ?? 'No certified root')}</strong><span class="explanation-hint">Bisection on [${escapeHtml(analysis.domain[0])}, ${escapeHtml(analysis.domain[1])}]</span></div></div><ol class="step-list" aria-label="Root steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="visual-details" open><summary>Convergence visual</summary><p>${escapeHtml(analysis.visual.description)}</p><div class="visual-preview">${analysis.visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">root · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.root ?? 'No certified root')}</strong><span class="explanation-hint">Bisection on [${escapeHtml(analysis.domain[0])}, ${escapeHtml(analysis.domain[1])}]</span></div></div><ol class="step-list" aria-label="Root steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Convergence visual')}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the root analyzer.</strong>', 'result-error'); }
     finally { rootButton.disabled = false; }
   };
@@ -257,7 +266,7 @@
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       const values = Object.entries(analysis.result).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(JSON.stringify(value))}</strong>`).join(' ');
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">matrix · ${escapeHtml(analysis.status)}</span><strong>${values}</strong></div></div><ol class="step-list" aria-label="Matrix steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="visual-details" open><summary>Matrix visual</summary><p>${escapeHtml(analysis.visual.description)}</p><div class="visual-preview">${analysis.visual.svg}</div></details></div>`, 'result-explanation');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">matrix · ${escapeHtml(analysis.status)}</span><strong>${values}</strong></div></div><ol class="step-list" aria-label="Matrix steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Matrix visual')}</div>`, 'result-explanation');
     } catch { showResult('<strong>Could not reach the matrix analyzer.</strong>', 'result-error'); }
     finally { matrixButton.disabled = false; }
   };
