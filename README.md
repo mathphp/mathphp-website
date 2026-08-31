@@ -18,3 +18,12 @@ The site installs the public `mathphp/mathphp` package through Composer. The
 private add-ons are optional; when they are not installed, their interactive
 endpoints report an explicit unavailable response while the package pages and
 core evaluator remain usable.
+
+## Operational endpoints
+
+- `GET /?api=health` reports core readiness and which optional packages are loaded.
+- `GET /?api=capabilities` lists the evaluator and add-on endpoints available to a client.
+
+These endpoints are read-only. Payment, sponsorship, account provisioning, and
+private-repository access remain deliberate product placeholders; the website
+does not issue tokens or synchronize users.

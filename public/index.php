@@ -137,7 +137,7 @@ function renderPackage(string $package): string
 function renderPricing(): string
 {
     return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Sponsor access</div><h1>Support the core.<br><em>Unlock the extras.</em></h1><p>MathPHP Core remains free. Sponsors receive private repository access to the add-ons, with existing licensed versions remaining usable after access ends.</p></section>'
-        . '<section class="pricing-section wrap"><div class="pricing-grid"><article class="pricing-card"><span class="pricing-kicker">Core</span><h2>Free</h2><div class="pricing-price">€0 <small>forever</small></div><p>The bounded evaluator for every PHP project.</p><ul><li>Public Composer package</li><li>Stable errors and limits</li><li>Community issues and pull requests</li></ul><a class="button button-secondary" href="?page=docs">Read the docs <span>→</span></a></article><article class="pricing-card pricing-card-featured"><span class="pricing-kicker">Individual</span><h2>Plus</h2><div class="pricing-price">€12 <small>/ month</small></div><p>Step-by-step explanations and visual output for one developer.</p><ul><li>Both private add-ons</li><li>Private GitHub read access</li><li>Updates while active</li><li>Perpetual use of obtained versions</li></ul><a class="button button-primary" href="https://github.com/sponsors/mathphp">Sponsor on GitHub <span>↗</span></a></article><article class="pricing-card"><span class="pricing-kicker">Team</span><h2>Team</h2><div class="pricing-price">€39 <small>/ month</small></div><p>Shared access for a small product team.</p><ul><li>Both private add-ons</li><li>Up to five developers</li><li>Commercial internal use</li><li>Priority issue handling</li></ul><a class="button button-secondary" href="https://github.com/sponsors/mathphp">Sponsor on GitHub <span>↗</span></a></article></div><div class="pricing-terms"><strong>How access works</strong><span>GitHub Sponsors automatically syncs private-repository access for eligible tiers. No shared tokens. No forced runtime check-ins.</span><a href="?page=docs#api">Read license and API notes <span>→</span></a></div><div class="detail-grid pricing-detail"><article><h3>After cancellation</h3><p>Remove repository access and updates. Copies already obtained remain usable under the private license.</p></article><article><h3>Team administration</h3><p>Invite named GitHub accounts only. Never share a Composer token or a repository mirror.</p></article><article><h3>Procurement</h3><p>Need an invoice, a larger seat count, or a private support arrangement? Contact the project maintainer.</p></article></div></section>';
+        . '<section class="pricing-section wrap" id="decision"><div class="planning-note"><strong>Planning placeholder</strong><span>Pricing, payment, sponsorship, and repository-access automation are intentionally not connected yet. These plan shapes are here to help decide the product model.</span></div><div class="pricing-grid"><article class="pricing-card"><span class="pricing-kicker">Core</span><h2>Free</h2><div class="pricing-price">€0 <small>forever</small></div><p>The bounded evaluator for every PHP project.</p><ul><li>Public Composer package</li><li>Stable errors and limits</li><li>Community issues and pull requests</li></ul><a class="button button-secondary" href="?page=docs">Read the docs <span>→</span></a></article><article class="pricing-card pricing-card-featured"><span class="pricing-kicker">Individual</span><h2>Plus</h2><div class="pricing-price">€12 <small>/ month</small></div><p>Step-by-step explanations and visual output for one developer.</p><ul><li>Both private add-ons</li><li>Named-user access (proposed)</li><li>Updates while active (proposed)</li><li>Perpetual use of obtained versions</li></ul><a class="button button-primary" href="#decision">Review the proposal <span>↓</span></a></article><article class="pricing-card"><span class="pricing-kicker">Team</span><h2>Team</h2><div class="pricing-price">€39 <small>/ month</small></div><p>Shared access for a small product team.</p><ul><li>Both private add-ons</li><li>Up to five developers</li><li>Commercial internal use</li><li>Priority issue handling</li></ul><a class="button button-secondary" href="#decision">Review the proposal <span>↓</span></a></article></div><div class="pricing-terms"><strong>What is decided so far</strong><span>The packages and private licenses are real; checkout, sponsorship, user provisioning, and access revocation are not wired into this site.</span><a href="?page=docs#api">Read license and API notes <span>→</span></a></div><div class="detail-grid pricing-detail"><article><h3>License boundary</h3><p>Existing licensed copies remain usable under the private package license. Distribution and branding rules still apply.</p></article><article><h3>Access boundary</h3><p>No account sync, token issuing, or repository automation is performed by the website.</p></article><article><h3>Decision needed</h3><p>Choose a payment and access provider before turning this proposal into a purchase flow.</p></article></div></section>';
 }
 
 function renderDocs(): string
@@ -484,7 +484,29 @@ function handleCapabilitiesRequest(): never
         ['id' => 'root', 'endpoint' => '?api=root', 'input' => 'expression, variable, bracket', 'visualKinds' => ['root-convergence']],
         ['id' => 'statistics', 'endpoint' => '?api=statistics', 'input' => 'values, bins', 'visualKinds' => ['histogram']],
         ['id' => 'units', 'endpoint' => '?api=units', 'input' => 'quantity expression, numeric variables', 'visualKinds' => []],
+        ['id' => 'unit-explain', 'endpoint' => '?api=unit-explain', 'input' => 'quantity expression, numeric variables, locale', 'visualKinds' => []],
     ]], JSON_THROW_ON_ERROR);
+    exit;
+}
+
+function handleHealthRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    $core = class_exists('MathPHP\\Math');
+    $optional = [
+        'units' => class_exists('MathPHP\\Units\\UnitMath'),
+        'explaining' => class_exists('MathPHP\\Explaining\\Explainer'),
+        'visuals' => class_exists('MathPHP\\Visuals\\Plotter'),
+    ];
+    if (!$core) {
+        http_response_code(503);
+    }
+    echo json_encode([
+        'ok' => $core,
+        'status' => $core ? 'ok' : 'degraded',
+        'version' => '0.1',
+        'packages' => ['core' => $core, 'optional' => $optional],
+    ], JSON_THROW_ON_ERROR);
     exit;
 }
 
@@ -526,6 +548,9 @@ if (($_GET['api'] ?? '') === 'matrix') {
 }
 if (($_GET['api'] ?? '') === 'capabilities') {
     handleCapabilitiesRequest();
+}
+if (($_GET['api'] ?? '') === 'health') {
+    handleHealthRequest();
 }
 
 $page = $_GET['page'] ?? 'home';
