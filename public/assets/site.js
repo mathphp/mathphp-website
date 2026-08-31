@@ -88,7 +88,16 @@
     if (engineMeta) engineMeta.textContent = value;
   };
 
-  const looksLikeUnits = (value) => /(?:\d(?:\.\d+)?\s*[A-Za-z][A-Za-z0-9_°-]*|\bto\s+[A-Za-z][A-Za-z0-9_°-]*)/i.test(value);
+  // Keep Auto mode conservative: scientific notation is a scalar, not a unit
+  // token (for example, the `e3` suffix in `2e3`). Explicit conversions still
+  // opt into Units, and scientific notation followed by a real unit remains
+  // supported when the unit is separated from the exponent (`2e3 m`).
+  const looksLikeUnits = (value) => {
+    if (/\bto\s+[A-Za-z][A-Za-z0-9_°-]*/i.test(value)) return true;
+    if (/(?:\d+(?:\.\d+)?|\.\d+)[eE][+-]?\d+\s+[A-Za-z][A-Za-z0-9_°-]*/.test(value)) return true;
+    return /(?:^|[^\w.])(?:\d+(?:\.\d+)?|\.\d+)[ \t]*([A-Za-z°][A-Za-z0-9_°-]*)/i.test(value)
+      && !/(?:^|[^\w.])(?:\d+(?:\.\d+)?|\.\d+)[ \t]*[eE][+-]?\d+(?:$|[^A-Za-z0-9_°-])/i.test(value);
+  };
 
   const selectedEngine = () => {
     const selected = engine?.value || 'auto';
