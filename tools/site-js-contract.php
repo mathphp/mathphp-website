@@ -23,6 +23,8 @@ $checks = [
     'evaluate source span is escaped' => str_contains($source, 'escapeHtml(span)'),
     'visual details sanitize SVG' => str_contains($source, 'sanitizeSvg(visual.svg)'),
     'plot output sanitizes SVG' => substr_count($source, 'sanitizeSvg(visual.svg)') >= 2,
+    'visual details tolerate missing models' => str_contains($source, "!visual || typeof visual !== 'object'") && str_contains($source, 'SVG preview is unavailable'),
+    'plot output tolerates missing models' => str_contains($source, 'Plot data is incomplete.') && str_contains($source, "typeof visual.title === 'string'"),
     'SVG sanitizer removes scripts' => str_contains($source, "'script', 'foreignobject'"),
     'unsafe display interpolation is absent' => !str_contains($source, '${data.display}'),
     'unsafe error interpolation is absent' => !str_contains($source, '${data.message}'),

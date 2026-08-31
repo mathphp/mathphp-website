@@ -186,8 +186,15 @@
   };
 
   const visualDetails = (visual, summary = 'Visual representation') => {
-    if (!visual) return '<p class="visual-unavailable">This analysis has no visual model for the supplied input.</p>';
-    return `<details class="visual-details" open><summary>${escapeHtml(summary)}</summary><p>${escapeHtml(visual.description)}</p><div class="visual-preview">${sanitizeSvg(visual.svg)}</div></details>`;
+    if (!visual || typeof visual !== 'object') return '<p class="visual-unavailable">This analysis has no visual model for the supplied input.</p>';
+    const description = typeof visual.description === 'string' && visual.description.trim() !== ''
+      ? visual.description
+      : 'The analysis returned structured visual data without a description.';
+    const svg = typeof visual.svg === 'string' ? sanitizeSvg(visual.svg) : '';
+    const preview = svg
+      ? `<div class="visual-preview">${svg}</div>`
+      : '<p class="visual-unavailable">SVG preview is unavailable; use the structured visual data instead.</p>';
+    return `<details class="visual-details" open><summary>${escapeHtml(summary)}</summary><p>${escapeHtml(description)}</p>${preview}</details>`;
   };
 
   const showResult = (html, className) => {
@@ -345,7 +352,15 @@
       if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const visual = data.visual;
-      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${sanitizeSvg(visual.svg)}</div></div>`, 'result-explanation');
+      if (!visual || typeof visual !== 'object') {
+        showResult('<strong>Plot data is incomplete.</strong><p>The renderer returned no visual model. Try again or inspect the structured response.</p>', 'result-error');
+        return;
+      }
+      const title = typeof visual.title === 'string' && visual.title.trim() !== '' ? visual.title : 'Function plot';
+      const description = typeof visual.description === 'string' && visual.description.trim() !== '' ? visual.description : 'Structured plot data is available.';
+      const svg = typeof visual.svg === 'string' ? sanitizeSvg(visual.svg) : '';
+      const preview = svg ? `<div class="visual-preview">${svg}</div>` : '<p class="visual-unavailable">SVG preview is unavailable; use the structured plot data instead.</p>';
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(title)}</strong><span class="explanation-hint">${escapeHtml(description)}</span></div></div>${preview}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Visuals add-on');
     } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
     finally { refreshCapabilityControls(); }
