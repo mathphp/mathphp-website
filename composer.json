@@ -1,5 +1,6 @@
 {
     "name": "mathphp/mathphp-website",
+    "license": "MIT",
     "description": "MathPHP landing page, documentation site, and interactive evaluator",
     "type": "project",
     "require": {
