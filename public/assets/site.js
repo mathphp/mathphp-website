@@ -55,6 +55,18 @@
   const locale = document.querySelector('#locale');
   const resultHeading = document.querySelector('#result-heading');
 
+  // Plot controls keep the browser path aligned with the renderer-neutral API.
+  const plotButtonRow = plotButton?.closest('.action-row');
+  if (plotButtonRow && !document.querySelector('.plot-options')) {
+    const plotOptions = document.createElement('fieldset');
+    plotOptions.className = 'plot-options';
+    plotOptions.innerHTML = '<legend>Plot options <small>optional</small></legend><label for="plot-variable">Variable<input id="plot-variable" value="x" maxlength="32" pattern="[A-Za-z_][A-Za-z0-9_]*" autocomplete="off"></label><label for="plot-x-unit">X-axis unit<input id="plot-x-unit" maxlength="16" placeholder="s" autocomplete="off"></label><label for="plot-y-unit">Y-axis unit<input id="plot-y-unit" maxlength="16" placeholder="m" autocomplete="off"></label>';
+    plotButtonRow.insertAdjacentElement('afterend', plotOptions);
+  }
+  const plotVariable = document.querySelector('#plot-variable');
+  const plotXUnit = document.querySelector('#plot-x-unit');
+  const plotYUnit = document.querySelector('#plot-y-unit');
+
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
   const showResult = (html, className) => {
@@ -170,7 +182,12 @@
     try {
       const parsed = readVariables();
       if (!parsed.ok) return;
-      const response = await fetch('?api=plot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable: 'x', minimum: -10, maximum: 10, samples: 101, variables: parsed.value }) });
+      const variable = plotVariable?.value.trim() || 'x';
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(variable)) {
+        showResult('<strong>Plot variable must be a valid identifier.</strong><span>Use a name such as x or t.</span>', 'result-error');
+        return;
+      }
+      const response = await fetch('?api=plot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable, minimum: -10, maximum: 10, samples: 101, xUnit: plotXUnit?.value.trim() || '', yUnit: plotYUnit?.value.trim() || '', variables: parsed.value }) });
       const data = await response.json();
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const visual = data.visual;

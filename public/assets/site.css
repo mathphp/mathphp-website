@@ -79,3 +79,12 @@ body{background:radial-gradient(900px 500px at 82% -10%,rgba(113,64,220,.18),tra
 .planning-note{display:flex;align-items:flex-start;gap:14px;margin:0 0 26px;padding:16px 18px;border:1px solid var(--line);border-radius:5px;font:11px/1.55 var(--mono);color:var(--muted)}
 .planning-note strong{color:var(--orange);white-space:nowrap}
 @media(max-width:560px){.planning-note{flex-direction:column;gap:7px}}
+
+/* Optional plot metadata stays compact on desktop and stacks cleanly on phones. */
+.plot-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 6px;padding:12px;border:1px solid #2d3352;border-radius:5px;color:#a8aec4}
+.plot-options legend{grid-column:1/-1;padding:0 5px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:#b78aff}
+.plot-options legend small{font:10px var(--sans);text-transform:none;letter-spacing:0;color:#858ca5}
+.plot-options label{display:flex;flex-direction:column;gap:5px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.plot-options input{width:100%;padding:8px 9px;border:1px solid #343958;border-radius:3px;background:#0b0e1b;color:#eeeafa;font:12px var(--mono);outline:none}
+.plot-options input:focus{border-color:#8d5cff;box-shadow:0 0 0 2px rgba(141,92,255,.16)}
+@media(max-width:560px){.plot-options{grid-template-columns:1fr;margin-top:14px}.plot-options legend{grid-column:1}.plot-options label{font-size:9px}}
