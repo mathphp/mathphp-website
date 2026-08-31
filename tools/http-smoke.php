@@ -49,6 +49,31 @@ function requestJson(string $baseUrl, string $path, ?array $payload = null): arr
     return ['status' => $status, 'body' => $body];
 }
 
+/** @return array{status:int,body:string} */
+function requestText(string $baseUrl, string $path): array
+{
+    $options = [
+        'http' => [
+            'method' => 'GET',
+            'ignore_errors' => true,
+            'header' => 'Accept: text/html',
+            'timeout' => 10,
+        ],
+    ];
+    $response = file_get_contents($baseUrl . $path, false, stream_context_create($options));
+    $status = 0;
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d+)/', $header, $matches) === 1) {
+            $status = (int) $matches[1];
+        }
+    }
+    if ($response === false || $status === 0) {
+        throw new RuntimeException('No HTML response from ' . $path . '.');
+    }
+
+    return ['status' => $status, 'body' => $response];
+}
+
 function check(bool $condition, string $message): void
 {
     if (!$condition) {
@@ -73,6 +98,28 @@ try {
     $capabilityIds = array_column($capabilities['body']['capabilities'] ?? [], 'id');
     foreach (['evaluate', 'explain', 'equation', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain'] as $id) {
         check(in_array($id, $capabilityIds, true), 'capabilities lists ' . $id);
+    }
+
+    $pageChecks = [
+        '/' => 'Mathematics for PHP',
+        '/?page=packages' => 'One core.',
+        '/?page=explaining' => 'Teach the calculation.',
+        '/?page=visuals' => 'Show the calculation.',
+        '/?page=units' => 'Keep the unit attached.',
+        '/?page=pricing' => 'Choose the add-on model later.',
+        '/?page=docs' => 'Learn the engine.',
+        '/?page=playground' => 'Make a calculation.',
+        '/?page=units-guide' => '25m to km',
+        '/?page=explaining-equations' => '1*x^2 + 0*x + 1 = 5',
+        '/?page=explaining-systems' => '2*x + 3*y = 8; 1*x - 1*y = 1',
+        '/?page=explaining-calculus' => 'derivative',
+        '/?page=explaining-matrices' => 'determinant',
+    ];
+    foreach ($pageChecks as $path => $marker) {
+        $page = requestText($baseUrl, $path);
+        check($page['status'] === 200, 'page ' . $path . ' responds with HTTP 200');
+        check(str_contains($page['body'], $marker), 'page ' . $path . ' contains its contract marker');
+        check(!str_contains($page['body'], 'Fatal error') && !str_contains($page['body'], 'Warning:'), 'page ' . $path . ' has no PHP runtime warning');
     }
 
     $evaluation = requestJson($baseUrl, '/?api=evaluate', ['expression' => '2 + 2', 'variables' => []]);
