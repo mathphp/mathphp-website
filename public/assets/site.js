@@ -79,6 +79,11 @@
     result.innerHTML = html;
   };
 
+  const setEngineMeta = (value) => {
+    const engineMeta = document.querySelector('#result-engine');
+    if (engineMeta) engineMeta.textContent = value;
+  };
+
   const looksLikeUnits = (value) => /(?:\d(?:\.\d+)?\s*[A-Za-z][A-Za-z0-9_°-]*|\bto\s+[A-Za-z][A-Za-z0-9_°-]*)/i.test(value);
 
   const selectedEngine = () => {
@@ -120,8 +125,7 @@
           resultHeading.textContent = 'Result';
           showResult(`<span class="success-value">${escapeHtml(data.display)}</span><span class="success-type">${escapeHtml(data.type)} · deterministic result</span>`, 'result-success');
         }
-        const engineMeta = document.querySelector('#result-engine');
-        if (engineMeta) engineMeta.textContent = activeEngine === 'units' ? 'MathPHP Units add-on' : 'MathPHP Core';
+        setEngineMeta(activeEngine === 'units' ? 'MathPHP Units add-on' : 'MathPHP Core');
       } else {
         showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p><code>source span: ${data.span[0]}–${data.span[1]}</code>`, 'result-error');
       }
@@ -153,8 +157,7 @@
         const steps = explanation.steps.map((step) => `<li><span class="step-index" aria-hidden="true">${step.id}</span><div class="step-copy"><code>${escapeHtml(step.expression)}</code><strong>${escapeHtml(step.message)}</strong><span class="step-detail">${escapeHtml(step.detail)}</span></div><strong class="step-result">${escapeHtml(step.result.formatted)}</strong></li>`).join('');
         resultHeading.textContent = 'Unit steps';
         showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">↗</span><div><span class="explanation-label">${escapeHtml(explanation.locale)} unit explanation</span><strong>${escapeHtml(explanation.result.formatted)}</strong><span class="explanation-hint">Each card shows the operation, conversion, and resulting quantity.</span></div></div><ol class="step-list" aria-label="Unit calculation steps">${steps}</ol></div>`, 'result-explanation');
-        const engineMeta = document.querySelector('#result-engine');
-        if (engineMeta) engineMeta.textContent = 'MathPHP Explaining + Units';
+        setEngineMeta('MathPHP Explaining + Units');
         return;
       }
       resultHeading.textContent = 'Step-by-step';
@@ -162,6 +165,7 @@
       const visual = data.explanation.visual;
       const visualMarkup = visualDetails(visual);
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">✦</span><div><span class="explanation-label">${escapeHtml(data.explanation.locale)} explanation</span><strong>${escapeHtml(data.explanation.result)}</strong><span class="explanation-hint">Each card shows the rule, the substitution, and the result.</span></div></div><ol class="step-list" aria-label="Calculation steps">${steps}</ol>${visualMarkup}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining');
     } catch {
       showResult('<strong>Could not reach the explanation service.</strong><span>Check that the private explaining package is installed.</span>', 'result-error');
     } finally {
@@ -182,6 +186,7 @@
       const steps = analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique value yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Equation analysis">${steps}</ol>${visualDetails(analysis.visual)}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Equations');
     } catch { showResult('<strong>Could not reach the equation analyzer.</strong>', 'result-error'); }
     finally { analyzeButton.disabled = false; }
   };
@@ -201,6 +206,7 @@
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const visual = data.visual;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${visual.svg}</div></div>`, 'result-explanation');
+      setEngineMeta('MathPHP Visuals add-on');
     } catch { showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
     finally { plotButton.disabled = false; }
   };
@@ -215,6 +221,7 @@
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
       const visual = analysis.visual;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique solution yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="System analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(visual, 'Matrix representation')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Systems');
     } catch { showResult('<strong>Could not reach the system analyzer.</strong>', 'result-error'); }
     finally { systemButton.disabled = false; }
   };
@@ -228,6 +235,7 @@
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">${operation === 'integral' ? '∫' : '′'}</span><div><span class="explanation-label">${escapeHtml(analysis.operation)}</span><strong>${escapeHtml(analysis.result)}</strong><span class="explanation-hint">${escapeHtml(analysis.status)}</span></div></div><ol class="step-list" aria-label="Calculus steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Calculus visual')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Calculus');
     } catch { showResult('<strong>Could not reach the calculus analyzer.</strong>', 'result-error'); }
     finally { control.disabled = false; }
   };
@@ -240,6 +248,7 @@
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">∫</span><div><span class="explanation-label">signed area · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.area)}</strong><span class="explanation-hint">${escapeHtml(analysis.expression)} from ${escapeHtml(analysis.domain[0])} to ${escapeHtml(analysis.domain[1])}</span></div></div><ol class="step-list" aria-label="Area steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Area visual')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Area');
     } catch { showResult('<strong>Could not reach the area analyzer.</strong>', 'result-error'); }
     finally { areaButton.disabled = false; }
   };
@@ -252,6 +261,7 @@
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">root · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.root ?? 'No certified root')}</strong><span class="explanation-hint">Bisection on [${escapeHtml(analysis.domain[0])}, ${escapeHtml(analysis.domain[1])}]</span></div></div><ol class="step-list" aria-label="Root steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Convergence visual')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Root');
     } catch { showResult('<strong>Could not reach the root analyzer.</strong>', 'result-error'); }
     finally { rootButton.disabled = false; }
   };
@@ -267,6 +277,7 @@
       const analysis = data.analysis;
       const values = Object.entries(analysis.result).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(JSON.stringify(value))}</strong>`).join(' ');
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">matrix · ${escapeHtml(analysis.status)}</span><strong>${values}</strong></div></div><ol class="step-list" aria-label="Matrix steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Matrix visual')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Matrix');
     } catch { showResult('<strong>Could not reach the matrix analyzer.</strong>', 'result-error'); }
     finally { matrixButton.disabled = false; }
   };
