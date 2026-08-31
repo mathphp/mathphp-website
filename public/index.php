@@ -10,13 +10,15 @@ $unitsAutoload = dirname(__DIR__) . '/private/mathphp-units/vendor/autoload.php'
 if (is_file($unitsAutoload)) {
     require_once $unitsAutoload;
 }
-$visualsAutoload = dirname(__DIR__) . '/private/mathphp-visuals/vendor/autoload.php';
-if (is_file($visualsAutoload)) {
-    require_once $visualsAutoload;
-}
 $explainingAutoload = dirname(__DIR__) . '/private/mathphp-explaining/vendor/autoload.php';
 if (is_file($explainingAutoload)) {
     require_once $explainingAutoload;
+}
+$visualsAutoload = dirname(__DIR__) . '/private/mathphp-visuals/vendor/autoload.php';
+if (is_file($visualsAutoload)) {
+    // Composer prepends each autoloader; register standalone Visuals last so
+    // its checked-out source cannot be shadowed by Explaining's locked copy.
+    require_once $visualsAutoload;
 }
 
 use MathPHP\Math;

@@ -34,6 +34,8 @@ jobs:
         run: php tools/site-js-contract.php
       - name: Check container entrypoint syntax
         run: sh -n docker-entrypoint.sh
+      - name: Check optional package autoload order
+        run: php tools/package-autoload-contract.php
       - name: Start local HTTP smoke server
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/mathphp-smoke-server.log 2>&1 &
