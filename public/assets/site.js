@@ -37,6 +37,7 @@
 
   const expression = document.querySelector('#expression');
   const variables = document.querySelector('#variables');
+  const engine = document.querySelector('#engine');
   const result = document.querySelector('#result');
   const button = document.querySelector('#evaluate');
   const explainButton = document.querySelector('#explain');
@@ -61,6 +62,13 @@
     result.innerHTML = html;
   };
 
+  const looksLikeUnits = (value) => /(?:\d(?:\.\d+)?\s*[A-Za-z][A-Za-z0-9_°-]*|\bto\s+[A-Za-z][A-Za-z0-9_°-]*)/i.test(value);
+
+  const selectedEngine = () => {
+    const selected = engine?.value || 'auto';
+    return selected === 'auto' ? (looksLikeUnits(expression.value) ? 'units' : 'core') : selected;
+  };
+
   const readVariables = () => {
     try {
       return { ok: true, value: JSON.parse(variables.value || '{}') };
@@ -77,13 +85,24 @@
     if (!parsed.ok) { button.disabled = false; button.style.opacity = '1'; return; }
 
     try {
-      const response = await fetch('?api=evaluate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value }) });
+      const activeEngine = selectedEngine();
+      const endpoint = activeEngine === 'units' ? '?api=units' : '?api=evaluate';
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value }) });
       const data = await response.json();
       if (data.ok) {
-        resultHeading.textContent = 'Result';
-        showResult(`<span class="success-value">${data.display}</span><span class="success-type">${data.type} · deterministic result</span>`, 'result-success');
+        if (activeEngine === 'units') {
+          const quantity = data.quantity;
+          const dimensions = Object.entries(quantity.dimensions || {}).map(([name, power]) => `${name}${power === 1 ? '' : `^${power}`}`).join(' · ') || 'dimensionless';
+          resultHeading.textContent = 'Units result';
+          showResult(`<span class="success-value">${escapeHtml(quantity.formatted)}</span><span class="success-type">${escapeHtml(quantity.unit || 'scalar')} · ${escapeHtml(dimensions)} · normalized</span>`, 'result-success');
+        } else {
+          resultHeading.textContent = 'Result';
+          showResult(`<span class="success-value">${escapeHtml(data.display)}</span><span class="success-type">${escapeHtml(data.type)} · deterministic result</span>`, 'result-success');
+        }
+        const engineMeta = document.querySelector('#result-engine');
+        if (engineMeta) engineMeta.textContent = activeEngine === 'units' ? 'MathPHP Units add-on' : 'MathPHP Core';
       } else {
-        showResult(`<strong>${data.code}</strong><p>${data.message}</p><code>source span: ${data.span[0]}–${data.span[1]}</code>`, 'result-error');
+        showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p><code>source span: ${data.span[0]}–${data.span[1]}</code>`, 'result-error');
       }
     } catch {
       showResult('<strong>Could not reach the evaluator.</strong><span>Check that the local PHP server is running.</span>', 'result-error');
