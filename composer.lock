@@ -11,13 +11,13 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:mathphp/mathphp.git",
-                "reference": "3f2c54f771bfbd1a4579b320dd253724c6255e00"
+                "url": "https://github.com/mathphp/mathphp.git",
+                "reference": "4a8b67e0540c24fb91c6cc6c37997563bff6ccec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/3f2c54f771bfbd1a4579b320dd253724c6255e00",
-                "reference": "3f2c54f771bfbd1a4579b320dd253724c6255e00",
+                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/4a8b67e0540c24fb91c6cc6c37997563bff6ccec",
+                "reference": "4a8b67e0540c24fb91c6cc6c37997563bff6ccec",
                 "shasum": ""
             },
             "require": {
@@ -75,7 +75,11 @@
                 "parser",
                 "safe-evaluation"
             ],
-            "time": "2026-08-31T08:59:18+00:00"
+            "support": {
+                "source": "https://github.com/mathphp/mathphp/tree/main",
+                "issues": "https://github.com/mathphp/mathphp/issues"
+            },
+            "time": "2026-08-31T10:47:36+00:00"
         }
     ],
     "packages-dev": [],
