@@ -168,6 +168,13 @@ try {
         }
     }
 
+    $rootHole = requestJson($baseUrl, '/?api=root', ['expression' => '1/x', 'variable' => 'x', 'minimum' => -1, 'maximum' => 1, 'iterations' => 20]);
+    if ($requireOptional) {
+        check(($rootHole['body']['ok'] ?? true) === true && ($rootHole['body']['analysis']['status'] ?? null) === 'partial' && ($rootHole['body']['analysis']['root'] ?? null) === null && ($rootHole['body']['analysis']['iterations'] ?? null) === [], 'root analyzer reports undefined interior samples as partial');
+    } else {
+        check(($rootHole['body']['ok'] ?? true) === false && ($rootHole['body']['code'] ?? null) === 'explain.unavailable', 'root hole check reports an explicit unavailable state');
+    }
+
     $unitErrorChecks = [
         'units incompatibility diagnostics' => ['payload' => ['expression' => '2m + 3s', 'variables' => []], 'code' => 'units.incompatible_addition', 'span' => [3, 4]],
         'units conversion diagnostics' => ['payload' => ['expression' => '25m to s', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [7, 8]],
