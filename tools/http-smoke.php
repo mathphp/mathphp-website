@@ -150,6 +150,19 @@ try {
         }
     }
 
+    $unitErrorChecks = [
+        'units incompatibility diagnostics' => ['payload' => ['expression' => '2m + 3s', 'variables' => []], 'code' => 'units.incompatible_addition', 'span' => [3, 4]],
+        'units conversion diagnostics' => ['payload' => ['expression' => '25m to s', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [7, 8]],
+    ];
+    foreach ($unitErrorChecks as $name => $definition) {
+        $response = requestJson($baseUrl, '/?api=units', $definition['payload']);
+        if ($requireOptional) {
+            check(($response['body']['ok'] ?? true) === false && ($response['body']['code'] ?? null) === $definition['code'] && ($response['body']['span'] ?? null) === $definition['span'], $name . ' report the operator/target span');
+        } else {
+            check(($response['body']['ok'] ?? true) === false && ($response['body']['code'] ?? null) === 'units.unavailable', $name . ' reports an explicit unavailable state');
+        }
+    }
+
     echo $requireOptional ? "HTTP smoke suite passed (core + optional packages).\n" : "HTTP smoke suite passed (core-only mode).\n";
     exit(0);
 } catch (Throwable $error) {

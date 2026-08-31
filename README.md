@@ -47,4 +47,4 @@ The default core-only mode expects explicit `*.unavailable` responses for
 private add-ons. To verify a deployment where all optional packages are
 installed, set `MATHPHP_SMOKE_REQUIRE_OPTIONAL=1`; the same script then checks
 the explanation, equation, system, matrix, calculus, area, root, statistics,
-Units, and Visuals success payloads.
+Units, and Visuals success payloads, including precise unit error spans.
