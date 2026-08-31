@@ -5,7 +5,7 @@ COPY composer.json composer.lock ./
 # Keep the dependency layer tied to the reviewed Core revision. Nova may reuse
 # remote Docker layers between deploys; changing this value forces a fresh
 # Composer install when the root lockfile moves.
-ARG DEPENDENCY_CACHE_BUSTER=core-4a8b67e
+ARG DEPENDENCY_CACHE_BUSTER=core-v0.1.0
 RUN echo "MathPHP dependency layer ${DEPENDENCY_CACHE_BUSTER}" \
     && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7b59c4247d6512a1ebd259fd92db6b5d",
+    "content-hash": "ee4f7e2635f94960af239c21ebbc65d5",
     "packages": [
         {
             "name": "mathphp/mathphp",
-            "version": "dev-main",
+            "version": "v0.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mathphp/mathphp.git",
-                "reference": "4a8b67e0540c24fb91c6cc6c37997563bff6ccec"
+                "url": "git@github.com:mathphp/mathphp.git",
+                "reference": "6869cb38a24d1d22cfd30bce6809ac3d70fad413"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/4a8b67e0540c24fb91c6cc6c37997563bff6ccec",
-                "reference": "4a8b67e0540c24fb91c6cc6c37997563bff6ccec",
+                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/6869cb38a24d1d22cfd30bce6809ac3d70fad413",
+                "reference": "6869cb38a24d1d22cfd30bce6809ac3d70fad413",
                 "shasum": ""
             },
             "require": {
@@ -28,7 +28,6 @@
                 "phpunit/phpunit": "^11.5",
                 "squizlabs/php_codesniffer": "^4.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -75,19 +74,13 @@
                 "parser",
                 "safe-evaluation"
             ],
-            "support": {
-                "source": "https://github.com/mathphp/mathphp/tree/main",
-                "issues": "https://github.com/mathphp/mathphp/issues"
-            },
-            "time": "2026-08-31T10:47:36+00:00"
+            "time": "2026-08-31T11:09:10+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "mathphp/mathphp": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

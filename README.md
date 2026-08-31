@@ -36,11 +36,12 @@ runtime lockfiles (or Composer metadata for the core), so operators can match
 a response to a specific build without exposing credentials.
 
 The website commits its core `composer.lock`; Docker and CI therefore install
-the reviewed core revision instead of resolving `dev-main` at build time. For
+the reviewed Core `v0.1.0` revision instead of resolving a moving branch at
+build time. For
 optional packages, `MATHPHP_PRIVATE_REPO_REF` selects a shared branch, tag, or
 commit fallback, while `MATHPHP_UNITS_REF`, `MATHPHP_VISUALS_REF`, and
 `MATHPHP_EXPLAINING_REF` can pin each add-on independently. Startup checks out
-the requested ref before installing dependencies, and the health/version
+the requested ref (defaulting to `v0.1.0`) before installing dependencies, and the health/version
 responses expose the resolved revision. Optional package roots also write a
 `.mathphp-revision` marker after checkout; this prevents a dependency lockfile
 from masking the actual add-on source revision running in the container.
