@@ -175,6 +175,15 @@ try {
         check(($rootHole['body']['ok'] ?? true) === false && ($rootHole['body']['code'] ?? null) === 'explain.unavailable', 'root hole check reports an explicit unavailable state');
     }
 
+    $areaHole = requestJson($baseUrl, '/?api=area', ['expression' => '1/x', 'variable' => 'x', 'minimum' => -1, 'maximum' => 1, 'samples' => 11]);
+    if ($requireOptional) {
+        $areaPoints = $areaHole['body']['analysis']['visual']['data']['points'] ?? [];
+        $hasUndefinedPoint = is_array($areaPoints) && array_filter($areaPoints, static fn (mixed $point): bool => is_array($point) && array_key_exists('y', $point) && $point['y'] === null) !== [];
+        check(($areaHole['body']['ok'] ?? true) === true && ($areaHole['body']['analysis']['status'] ?? null) === 'partial' && ($areaHole['body']['analysis']['area'] ?? 'missing') === null && $hasUndefinedPoint, 'area analyzer omits biased values for undefined samples');
+    } else {
+        check(($areaHole['body']['ok'] ?? true) === false && ($areaHole['body']['code'] ?? null) === 'explain.unavailable', 'area hole check reports an explicit unavailable state');
+    }
+
     $unitErrorChecks = [
         'units incompatibility diagnostics' => ['payload' => ['expression' => '2m + 3s', 'variables' => []], 'code' => 'units.incompatible_addition', 'span' => [3, 4]],
         'units conversion diagnostics' => ['payload' => ['expression' => '25m to s', 'variables' => []], 'code' => 'units.incompatible_conversion', 'span' => [7, 8]],
