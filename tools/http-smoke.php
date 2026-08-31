@@ -140,6 +140,11 @@ try {
         check(!str_contains($page['body'], 'Fatal error') && !str_contains($page['body'], 'Warning:'), 'page ' . $path . ' has no PHP runtime warning');
     }
 
+    foreach (['explaining', 'visuals', 'units'] as $packagePage) {
+        $page = requestText($baseUrl, '/?page=' . $packagePage);
+        check(str_contains($page['body'], 'Install from an approved source') && str_contains($page['body'], 'composer config repositories.'), 'package page ' . $packagePage . ' includes private installation guidance');
+    }
+
     $evaluation = requestJson($baseUrl, '/?api=evaluate', ['expression' => '2 + 2', 'variables' => []]);
     check(($evaluation['body']['ok'] ?? false) === true && ($evaluation['body']['result'] ?? null) === 4, 'core evaluates 2 + 2');
 
