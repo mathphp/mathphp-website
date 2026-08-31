@@ -27,6 +27,8 @@ $checks = [
     'unsafe display interpolation is absent' => !str_contains($source, '${data.display}'),
     'unsafe error interpolation is absent' => !str_contains($source, '${data.message}'),
     'auto engine detection is exposed' => str_contains($source, 'const looksLikeUnits') && str_contains($source, 'engineHint.textContent'),
+    'optional controls fail closed during discovery' => str_contains($source, 'let capabilitiesReady = false') && str_contains($source, "'Checking installed add-ons…'"),
+    'capabilities response status is checked' => str_contains($source, 'if (!response.ok) throw new Error'),
 ];
 
 foreach ($checks as $label => $passed) {

@@ -61,7 +61,11 @@
   // unavailable add-on actions are visibly disabled instead of failing only
   // after a click.
   const capabilityAvailability = new Map();
-  const capabilityAvailable = (id) => capabilityAvailability.get(id) !== false;
+  let capabilitiesReady = false;
+  let capabilityDiscoveryFailed = false;
+  const capabilityAvailable = (id) => id === 'evaluate'
+    ? true
+    : capabilitiesReady && capabilityAvailability.get(id) === true;
   const capabilityLabel = (id) => ({
     explain: 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
@@ -81,7 +85,13 @@
     control.dataset.capability = id;
     control.disabled = !available;
     control.setAttribute('aria-disabled', String(!available));
-    control.title = available ? '' : `Unavailable: install ${capabilityLabel(id)}.`;
+    control.title = available
+      ? ''
+      : (!capabilitiesReady
+        ? 'Checking installed add-ons…'
+        : (capabilityDiscoveryFailed
+          ? 'Add-on status is unavailable. Refresh to retry.'
+          : `Unavailable: install ${capabilityLabel(id)}.`));
   };
   const refreshCapabilityControls = () => {
     if (engine) {
@@ -92,11 +102,17 @@
     }
     const activeEngine = selectedEngine();
     if (engineHint) {
-      const label = activeEngine === 'units' ? 'Units' : 'Core';
-      const capability = activeEngine === 'units' ? 'units' : 'evaluate';
-      const available = capabilityAvailable(capability);
-      const mode = engine?.value === 'auto' ? `Auto → ${label}` : `${label} selected`;
-      engineHint.textContent = available ? mode : `${mode} unavailable`;
+      if (!capabilitiesReady) {
+        engineHint.textContent = 'Checking installed add-ons…';
+      } else if (capabilityDiscoveryFailed) {
+        engineHint.textContent = 'Add-on status unavailable · refresh to retry';
+      } else {
+        const label = activeEngine === 'units' ? 'Units' : 'Core';
+        const capability = activeEngine === 'units' ? 'units' : 'evaluate';
+        const available = capabilityAvailable(capability);
+        const mode = engine?.value === 'auto' ? `Auto → ${label}` : `${label} selected`;
+        engineHint.textContent = available ? mode : `${mode} unavailable`;
+      }
     }
     setControlAvailability(button, activeEngine === 'units' ? 'units' : 'evaluate');
     setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
@@ -113,17 +129,20 @@
   const loadCapabilities = async () => {
     try {
       const response = await fetch('?api=capabilities', { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error(`capabilities returned ${response.status}`);
       const data = await response.json();
-      if (!Array.isArray(data.capabilities)) return;
+      if (!Array.isArray(data.capabilities)) throw new Error('capabilities payload is invalid');
       data.capabilities.forEach((capability) => {
         if (typeof capability.id === 'string' && typeof capability.available === 'boolean') {
           capabilityAvailability.set(capability.id, capability.available);
         }
       });
+      capabilitiesReady = true;
       refreshCapabilityControls();
     } catch {
-      // Keep the optimistic defaults if discovery is unavailable; the API
-      // still returns its own explicit unavailable response on demand.
+      capabilitiesReady = true;
+      capabilityDiscoveryFailed = true;
+      refreshCapabilityControls();
     }
   };
 
