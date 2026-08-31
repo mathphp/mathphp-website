@@ -52,3 +52,5 @@ The optional checks also exercise multi-word and separator aliases such as
 `metres per second` and `mile per hour to km/h`.
 They also guard affine-temperature errors such as scaling an absolute
 `20C` reading.
+Zero quantities raised to negative powers are checked as structured division
+errors as well.
