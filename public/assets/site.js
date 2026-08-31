@@ -79,6 +79,10 @@
     result.innerHTML = html;
   };
 
+  let requestSerial = 0;
+  const beginRequest = () => { requestSerial += 1; return requestSerial; };
+  const isCurrentRequest = (serial) => serial === requestSerial;
+
   const setEngineMeta = (value) => {
     const engineMeta = document.querySelector('#result-engine');
     if (engineMeta) engineMeta.textContent = value;
@@ -105,6 +109,7 @@
   };
 
   const run = async () => {
+    const serial = beginRequest();
     button.disabled = true;
     button.style.opacity = '.65';
     const parsed = readVariables();
@@ -115,6 +120,7 @@
       const endpoint = activeEngine === 'units' ? '?api=units' : '?api=evaluate';
       const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (data.ok) {
         if (activeEngine === 'units') {
           const quantity = data.quantity;
@@ -130,6 +136,7 @@
         showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p><code>source span: ${data.span[0]}–${data.span[1]}</code>`, 'result-error');
       }
     } catch {
+      if (!isCurrentRequest(serial)) return;
       showResult('<strong>Could not reach the evaluator.</strong><span>Check that the local PHP server is running.</span>', 'result-error');
     } finally {
       button.disabled = false;
@@ -138,6 +145,7 @@
   };
 
   const explain = async () => {
+    const serial = beginRequest();
     explainButton.disabled = true;
     explainButton.style.opacity = '.65';
     const parsed = readVariables();
@@ -148,6 +156,7 @@
       const endpoint = activeEngine === 'units' ? '?api=unit-explain' : '?api=explain';
       const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value, locale: locale.value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) {
         showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error');
         return;
@@ -167,6 +176,7 @@
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">✦</span><div><span class="explanation-label">${escapeHtml(data.explanation.locale)} explanation</span><strong>${escapeHtml(data.explanation.result)}</strong><span class="explanation-hint">Each card shows the rule, the substitution, and the result.</span></div></div><ol class="step-list" aria-label="Calculation steps">${steps}</ol>${visualMarkup}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining');
     } catch {
+      if (!isCurrentRequest(serial)) return;
       showResult('<strong>Could not reach the explanation service.</strong><span>Check that the private explaining package is installed.</span>', 'result-error');
     } finally {
       explainButton.disabled = false;
@@ -175,23 +185,26 @@
   };
 
   const analyze = async () => {
+    const serial = beginRequest();
     analyzeButton.disabled = true;
     try {
       const parsed = readVariables();
       if (!parsed.ok) return;
       const response = await fetch('?api=analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equation: equation.value, known: parsed.value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       const steps = analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique value yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Equation analysis">${steps}</ol>${visualDetails(analysis.visual)}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Equations');
-    } catch { showResult('<strong>Could not reach the equation analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the equation analyzer.</strong>', 'result-error'); }
     finally { analyzeButton.disabled = false; }
   };
 
   const plot = async () => {
+    const serial = beginRequest();
     plotButton.disabled = true;
     try {
       const parsed = readVariables();
@@ -203,82 +216,93 @@
       }
       const response = await fetch('?api=plot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable, minimum: -10, maximum: 10, samples: 101, xUnit: plotXUnit?.value.trim() || '', yUnit: plotYUnit?.value.trim() || '', variables: parsed.value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const visual = data.visual;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌁</span><div><span class="explanation-label">function plot</span><strong>${escapeHtml(visual.title)}</strong><span class="explanation-hint">${escapeHtml(visual.description)}</span></div></div><div class="visual-preview">${visual.svg}</div></div>`, 'result-explanation');
       setEngineMeta('MathPHP Visuals add-on');
-    } catch { showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the plotting service.</strong>', 'result-error'); }
     finally { plotButton.disabled = false; }
   };
 
   const analyzeSystem = async () => {
+    const serial = beginRequest();
     systemButton.disabled = true;
     try {
       const response = await fetch('?api=system', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: system.value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       const solution = Object.entries(analysis.solutions).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(value)}</strong>`).join(' ');
       const visual = analysis.visual;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">${escapeHtml(analysis.status)}</span><strong>${solution || 'No unique solution yet'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="System analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(visual, 'Matrix representation')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Systems');
-    } catch { showResult('<strong>Could not reach the system analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the system analyzer.</strong>', 'result-error'); }
     finally { systemButton.disabled = false; }
   };
 
   const calculus = async (operation) => {
+    const serial = beginRequest();
     const control = operation === 'integral' ? integralButton : derivativeButton;
     control.disabled = true;
     try {
       const response = await fetch('?api=calculus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ operation, expression: expression.value, variable: 'x' }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">${operation === 'integral' ? '∫' : '′'}</span><div><span class="explanation-label">${escapeHtml(analysis.operation)}</span><strong>${escapeHtml(analysis.result)}</strong><span class="explanation-hint">${escapeHtml(analysis.status)}</span></div></div><ol class="step-list" aria-label="Calculus steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Calculus visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Calculus');
-    } catch { showResult('<strong>Could not reach the calculus analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the calculus analyzer.</strong>', 'result-error'); }
     finally { control.disabled = false; }
   };
 
   const area = async () => {
+    const serial = beginRequest();
     areaButton.disabled = true;
     try {
       const response = await fetch('?api=area', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable: 'x', minimum: 0, maximum: 1, samples: 101 }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">∫</span><div><span class="explanation-label">signed area · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.area)}</strong><span class="explanation-hint">${escapeHtml(analysis.expression)} from ${escapeHtml(analysis.domain[0])} to ${escapeHtml(analysis.domain[1])}</span></div></div><ol class="step-list" aria-label="Area steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Area visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Area');
-    } catch { showResult('<strong>Could not reach the area analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the area analyzer.</strong>', 'result-error'); }
     finally { areaButton.disabled = false; }
   };
 
   const findRoot = async () => {
+    const serial = beginRequest();
     rootButton.disabled = true;
     try {
       const response = await fetch('?api=root', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable: 'x', minimum: 0, maximum: 2, iterations: 40 }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">root · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(analysis.root ?? 'No certified root')}</strong><span class="explanation-hint">Bisection on [${escapeHtml(analysis.domain[0])}, ${escapeHtml(analysis.domain[1])}]</span></div></div><ol class="step-list" aria-label="Root steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Convergence visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Root');
-    } catch { showResult('<strong>Could not reach the root analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the root analyzer.</strong>', 'result-error'); }
     finally { rootButton.disabled = false; }
   };
 
   const analyzeMatrix = async () => {
+    const serial = beginRequest();
     matrixButton.disabled = true;
     try {
       let value;
       try { value = JSON.parse(matrix.value); } catch { showResult('<strong>Matrix must be valid JSON.</strong>', 'result-error'); return; }
       const response = await fetch('?api=matrix', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matrix: value }) });
       const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
       if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
       const analysis = data.analysis;
       const values = Object.entries(analysis.result).map(([key, value]) => `<strong>${escapeHtml(key)} = ${escapeHtml(JSON.stringify(value))}</strong>`).join(' ');
       showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">▦</span><div><span class="explanation-label">matrix · ${escapeHtml(analysis.status)}</span><strong>${values}</strong></div></div><ol class="step-list" aria-label="Matrix steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Matrix visual')}</div>`, 'result-explanation');
       setEngineMeta('MathPHP Explaining · Matrix');
-    } catch { showResult('<strong>Could not reach the matrix analyzer.</strong>', 'result-error'); }
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the matrix analyzer.</strong>', 'result-error'); }
     finally { matrixButton.disabled = false; }
   };
 
