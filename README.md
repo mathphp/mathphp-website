@@ -54,3 +54,5 @@ They also guard affine-temperature errors such as scaling an absolute
 `20C` reading.
 Zero quantities raised to negative powers are checked as structured division
 errors as well.
+Unit responses also verify that normalized `value` and display-unit
+`displayValue` remain distinct after conversion.
