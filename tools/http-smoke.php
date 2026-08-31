@@ -177,9 +177,10 @@ try {
 
     $areaHole = requestJson($baseUrl, '/?api=area', ['expression' => '1/x', 'variable' => 'x', 'minimum' => -1, 'maximum' => 1, 'samples' => 11]);
     if ($requireOptional) {
-        $areaPoints = $areaHole['body']['analysis']['visual']['data']['points'] ?? [];
+        $areaAnalysis = is_array($areaHole['body']['analysis'] ?? null) ? $areaHole['body']['analysis'] : [];
+        $areaPoints = is_array($areaAnalysis['visual']['data']['points'] ?? null) ? $areaAnalysis['visual']['data']['points'] : [];
         $hasUndefinedPoint = is_array($areaPoints) && array_filter($areaPoints, static fn (mixed $point): bool => is_array($point) && array_key_exists('y', $point) && $point['y'] === null) !== [];
-        check(($areaHole['body']['ok'] ?? true) === true && ($areaHole['body']['analysis']['status'] ?? null) === 'partial' && ($areaHole['body']['analysis']['area'] ?? 'missing') === null && $hasUndefinedPoint, 'area analyzer omits biased values for undefined samples');
+        check(($areaHole['body']['ok'] ?? true) === true && ($areaAnalysis['status'] ?? null) === 'partial' && array_key_exists('area', $areaAnalysis) && $areaAnalysis['area'] === null && $hasUndefinedPoint, 'area analyzer omits biased values for undefined samples');
     } else {
         check(($areaHole['body']['ok'] ?? true) === false && ($areaHole['body']['code'] ?? null) === 'explain.unavailable', 'area hole check reports an explicit unavailable state');
     }
