@@ -93,6 +93,12 @@ try {
     check($version['status'] === 200 && ($version['body']['ok'] ?? false) === true, 'version endpoint is ready');
     check(is_string($version['body']['version'] ?? null), 'version endpoint includes the API version');
     check(array_key_exists('reference', $version['body']['packages']['core'] ?? []), 'version endpoint includes core revision metadata');
+    foreach ($version['body']['packages'] ?? [] as $name => $metadata) {
+        if (!is_array($metadata) || ($metadata['version'] ?? null) === null) {
+            continue;
+        }
+        check(is_string($metadata['reference'] ?? null) && preg_match('/^[0-9a-f]{7,64}$/i', $metadata['reference']) === 1, 'version endpoint reports a valid revision for ' . $name);
+    }
 
     $capabilities = requestJson($baseUrl, '/?api=capabilities');
     $capabilityIds = array_column($capabilities['body']['capabilities'] ?? [], 'id');

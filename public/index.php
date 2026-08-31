@@ -45,14 +45,27 @@ function formatResult(int|float $result): string
 /**
  * Return the resolved version and source revision for one runtime package.
  * Lockfiles are preferred because optional packages have independent vendor
- * trees; Composer's InstalledVersions is the fallback for the public core.
+ * trees. Optional package roots also write a checkout marker during Docker
+ * startup so this reports the source that is actually running, not merely a
+ * dependency revision mentioned by another package's lockfile.
  *
  * @return array{version:string|null,reference:string|null}
  */
-function runtimePackageMetadata(string $package, string $lockPath, bool $available): array
+function runtimePackageMetadata(string $package, string $lockPath, bool $available, ?string $sourceDir = null): array
 {
     if (!$available) {
         return ['version' => null, 'reference' => null];
+    }
+
+    $sourceReference = null;
+    if ($sourceDir !== null) {
+        $markerPath = $sourceDir . '/.mathphp-revision';
+        if (is_file($markerPath)) {
+            $marker = file_get_contents($markerPath);
+            if ($marker !== false && preg_match('/^[0-9a-f]{7,64}$/i', trim($marker)) === 1) {
+                $sourceReference = trim($marker);
+            }
+        }
     }
 
     if (is_file($lockPath)) {
@@ -72,7 +85,7 @@ function runtimePackageMetadata(string $package, string $lockPath, bool $availab
 
                         return [
                             'version' => is_string($installed['version'] ?? null) ? $installed['version'] : null,
-                            'reference' => is_string($reference) ? $reference : null,
+                            'reference' => $sourceReference ?? (is_string($reference) ? $reference : null),
                         ];
                     }
                 }
@@ -87,7 +100,7 @@ function runtimePackageMetadata(string $package, string $lockPath, bool $availab
             if (\Composer\InstalledVersions::isInstalled($package)) {
                 return [
                     'version' => \Composer\InstalledVersions::getPrettyVersion($package),
-                    'reference' => \Composer\InstalledVersions::getReference($package),
+                    'reference' => $sourceReference ?? \Composer\InstalledVersions::getReference($package),
                 ];
             }
         } catch (Throwable) {
@@ -116,9 +129,9 @@ function runtimePackageState(): array
         'optional' => $optional,
         'versions' => [
             'core' => runtimePackageMetadata('mathphp/mathphp', $root . '/composer.lock', $core),
-            'units' => runtimePackageMetadata('mathphp/mathphp-units', $root . '/private/mathphp-units/composer.lock', $optional['units']),
-            'explaining' => runtimePackageMetadata('mathphp/mathphp-explaining', $root . '/private/mathphp-explaining/composer.lock', $optional['explaining']),
-            'visuals' => runtimePackageMetadata('mathphp/mathphp-visuals', $root . '/private/mathphp-visuals/composer.lock', $optional['visuals']),
+            'units' => runtimePackageMetadata('mathphp/mathphp-units', $root . '/private/mathphp-units/composer.lock', $optional['units'], $root . '/private/mathphp-units'),
+            'explaining' => runtimePackageMetadata('mathphp/mathphp-explaining', $root . '/private/mathphp-explaining/composer.lock', $optional['explaining'], $root . '/private/mathphp-explaining'),
+            'visuals' => runtimePackageMetadata('mathphp/mathphp-visuals', $root . '/private/mathphp-visuals/composer.lock', $optional['visuals'], $root . '/private/mathphp-visuals'),
         ],
     ];
 }

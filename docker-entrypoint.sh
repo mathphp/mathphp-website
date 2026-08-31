@@ -16,7 +16,8 @@ install_private_package() {
     if git -c "http.extraHeader=Authorization: Basic $auth_header" clone --depth 1 "https://github.com/mathphp/${package}.git" "$staging_dir" \
         && git -c "http.extraHeader=Authorization: Basic $auth_header" -C "$staging_dir" fetch --depth 1 origin "$package_ref" \
         && git -C "$staging_dir" checkout --detach "$package_ref" \
-        && COMPOSER_AUTH="$composer_auth" composer install --working-dir="$staging_dir" --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader; then
+        && COMPOSER_AUTH="$composer_auth" composer install --working-dir="$staging_dir" --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader \
+        && git -C "$staging_dir" rev-parse HEAD > "$staging_dir/.mathphp-revision"; then
         if [ -e "$private_dir" ]; then rm -rf "$private_dir"; fi
         mv "$staging_dir" "$private_dir"
         echo "MathPHP ${package} installed."

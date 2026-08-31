@@ -39,7 +39,9 @@ optional packages, `MATHPHP_PRIVATE_REPO_REF` selects a shared branch, tag, or
 commit fallback, while `MATHPHP_UNITS_REF`, `MATHPHP_VISUALS_REF`, and
 `MATHPHP_EXPLAINING_REF` can pin each add-on independently. Startup checks out
 the requested ref before installing dependencies, and the health/version
-responses expose the resolved revision.
+responses expose the resolved revision. Optional package roots also write a
+`.mathphp-revision` marker after checkout; this prevents a dependency lockfile
+from masking the actual add-on source revision running in the container.
 
 These endpoints are read-only. Payment, sponsorship, account provisioning, and
 private-repository access remain deliberate product placeholders; the website
