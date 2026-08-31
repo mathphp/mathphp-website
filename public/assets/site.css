@@ -80,6 +80,9 @@ body{background:radial-gradient(900px 500px at 82% -10%,rgba(113,64,220,.18),tra
 .planning-note strong{color:var(--orange);white-space:nowrap}
 @media(max-width:560px){.planning-note{flex-direction:column;gap:7px}}
 
+.engine-hint{display:block;margin-top:3px;font:9px var(--mono);color:#8e94aa;white-space:nowrap}
+@media(max-width:560px){.engine-hint{white-space:normal;max-width:130px;line-height:1.3}}
+
 /* Optional plot metadata stays compact on desktop and stacks cleanly on phones. */
 .plot-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 6px;padding:12px;border:1px solid #2d3352;border-radius:5px;color:#a8aec4}
 .plot-options legend{grid-column:1/-1;padding:0 5px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:#b78aff}

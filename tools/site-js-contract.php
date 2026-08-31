@@ -26,6 +26,7 @@ $checks = [
     'SVG sanitizer removes scripts' => str_contains($source, "'script', 'foreignobject'"),
     'unsafe display interpolation is absent' => !str_contains($source, '${data.display}'),
     'unsafe error interpolation is absent' => !str_contains($source, '${data.message}'),
+    'auto engine detection is exposed' => str_contains($source, 'const looksLikeUnits') && str_contains($source, 'engineHint.textContent'),
 ];
 
 foreach ($checks as $label => $passed) {

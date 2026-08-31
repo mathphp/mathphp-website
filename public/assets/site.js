@@ -38,6 +38,7 @@
   const expression = document.querySelector('#expression');
   const variables = document.querySelector('#variables');
   const engine = document.querySelector('#engine');
+  const engineHint = document.querySelector('#engine-hint');
   const result = document.querySelector('#result');
   const button = document.querySelector('#evaluate');
   const explainButton = document.querySelector('#explain');
@@ -90,6 +91,13 @@
       });
     }
     const activeEngine = selectedEngine();
+    if (engineHint) {
+      const label = activeEngine === 'units' ? 'Units' : 'Core';
+      const capability = activeEngine === 'units' ? 'units' : 'evaluate';
+      const available = capabilityAvailable(capability);
+      const mode = engine?.value === 'auto' ? `Auto → ${label}` : `${label} selected`;
+      engineHint.textContent = available ? mode : `${mode} unavailable`;
+    }
     setControlAvailability(button, activeEngine === 'units' ? 'units' : 'evaluate');
     setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
     setControlAvailability(analyzeButton, 'equation');
