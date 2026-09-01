@@ -238,7 +238,7 @@ function renderPackage(string $package): string
         . '<section class="package-adds wrap"><div class="section-kicker">What it adds</div><div class="package-adds-grid">' . $whatItAdds . '</div></section>'
         . '<section class="package-flow wrap"><div><div class="section-kicker">How it fits</div><h2>One core call.<br><em>One richer response.</em></h2></div><div class="flow-steps"><div><span>01</span><strong>Evaluate</strong><small>Core parses and validates the expression.</small></div><div><span>02</span><strong>Enrich</strong><small>' . ($explaining ? 'Explaining records each completed operation.' : ($units ? 'Units normalizes dimensions and conversions.' : 'Visuals turns the result into portable models.')) . '</small></div><div><span>03</span><strong>Present</strong><small>Your application chooses the UI, language, and renderer.</small></div></div></section>'
         . ($explaining || $units ? '' : $visualGallery)
-        . '<section class="package-guides wrap"><div class="section-kicker">Feature guides</div><div class="package-guide-links">' . ($explaining ? '<a href="?page=explaining-steps"><strong>Step-by-step evaluation</strong><span>Build a lesson from each operation →</span></a><a href="?page=explaining-translations"><strong>Translations & observers</strong><span>Localize and instrument safely →</span></a><a href="?page=explaining-equations"><strong>Equation analyzer</strong><span>Explain unknowns and known values →</span></a><a href="?page=explaining-systems"><strong>System analyzer</strong><span>Describe linear constraints →</span></a><a href="?page=explaining-matrices"><strong>Matrix analyzer</strong><span>Inspect dimensions and values →</span></a><a href="?page=explaining-calculus"><strong>Calculus analyzer</strong><span>Derivatives and integrals →</span></a><a href="?page=explaining-area"><strong>Area, roots & statistics</strong><span>Numerical analysis models →</span></a><a href="?page=explaining-equations#pde"><strong>Numerical PDEs</strong><span>Bounded field snapshots →</span></a>' : ($units ? '<a href="?page=units-guide"><strong>Unit grammar</strong><span>Write quantities and conversions →</span></a><a href="?page=units-guide"><strong>Dimensional arithmetic</strong><span>Rates, powers, and compatibility →</span></a><a href="?page=units-guide"><strong>Custom catalogs</strong><span>Register domain-specific symbols →</span></a>' : '<a href="?page=visuals-plots"><strong>Plots & sampling</strong><span>Turn formulas into portable data →</span></a><a href="?page=visuals-rendering"><strong>Rendering pipeline</strong><span>SVG, data URIs, and accessibility →</span></a><a href="?page=visuals-analysis"><strong>Analysis models</strong><span>Connect analyzer output to a view →</span></a>')) . '</div></section>';
+        . '<section class="package-guides wrap"><div class="section-kicker">Feature guides</div><div class="package-guide-links">' . ($explaining ? '<a href="?page=explaining-steps"><strong>Step-by-step evaluation</strong><span>Build a lesson from each operation →</span></a><a href="?page=explaining-translations"><strong>Translations & observers</strong><span>Localize and instrument safely →</span></a><a href="?page=explaining-equations"><strong>Equation analyzer</strong><span>Explain unknowns and known values →</span></a><a href="?page=explaining-systems"><strong>System analyzer</strong><span>Describe linear constraints →</span></a><a href="?page=explaining-matrices"><strong>Matrix analyzer</strong><span>Inspect dimensions and values →</span></a><a href="?page=explaining-calculus"><strong>Calculus analyzer</strong><span>Derivatives and integrals →</span></a><a href="?page=explaining-area"><strong>Area, roots & statistics</strong><span>Numerical analysis models →</span></a><a href="?page=explaining-equations#pde"><strong>Numerical PDEs</strong><span>Bounded field snapshots →</span></a><a href="?page=explaining-equations#bvp"><strong>Boundary-value ODEs</strong><span>Shoot to endpoint constraints →</span></a>' : ($units ? '<a href="?page=units-guide"><strong>Unit grammar</strong><span>Write quantities and conversions →</span></a><a href="?page=units-guide"><strong>Dimensional arithmetic</strong><span>Rates, powers, and compatibility →</span></a><a href="?page=units-guide"><strong>Custom catalogs</strong><span>Register domain-specific symbols →</span></a>' : '<a href="?page=visuals-plots"><strong>Plots & sampling</strong><span>Turn formulas into portable data →</span></a><a href="?page=visuals-rendering"><strong>Rendering pipeline</strong><span>SVG, data URIs, and accessibility →</span></a><a href="?page=visuals-analysis"><strong>Analysis models</strong><span>Connect analyzer output to a view →</span></a>')) . '</div></section>';
 }
 
 function renderPricing(): string
@@ -278,13 +278,14 @@ function renderGuide(string $guide): string
         'explaining-roots' => ['Explaining add-on', 'Root finding', 'Show a bracket, convergence evidence, and explicit partial status rather than presenting a root as magic.', '<h2>Explain convergence—and its limits.</h2><p><code>RootAnalyzer</code> uses bisection and exposes the original interval, endpoint sign check, midpoint history, and approximate result. A finite increasing bracket with opposite signs is required; an endpoint at zero is valid.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> RootAnalyzer())-&gt;analyze(<span class="code-string">\'x^2 - 2\'</span>, <span class="code-string">\'x\'</span>, 0, 2, iterations: 20);<br><span class="code-comment">// status: solved; root: approximately 1.4142135623731</span></code></pre><div class="guide-note"><strong>Partial is a result:</strong><span>If endpoints do not bracket a root or an interior sample is undefined, the analyzer returns <code>status: partial</code> and <code>root: null</code>. Keep the steps and successful iterations in the explanation.</span></div>'],
         'explaining-statistics' => ['Explaining add-on', 'Statistics analysis', 'Turn a numeric sample into summary values and histogram-ready bins with explicit input assumptions.', '<h2>Summaries with provenance.</h2><p><code>StatisticsAnalyzer</code> keeps the input sample and bin choice close to the derived summary. This is ideal for teaching mean, spread, and distribution without hiding the data.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> StatisticsAnalyzer())-&gt;analyze([2, 3, 3, 4, 8], 4);</code></pre><p>Use <a href="?page=visuals-rendering">Visuals</a> to render the bins, and expose the raw sample for accessible fallback text.</p>'],
         'visuals-rendering' => ['Visuals add-on', 'Rendering pipeline', 'Keep representations portable: generate structured data first, then choose SVG, Canvas, or your own renderer.', '<h2>Renderer-neutral by design.</h2><p><code>VisualRepresentation</code> is the hand-off point between analysis and presentation. <code>Plotter</code> creates samples and metadata; <code>SvgRenderer</code> turns supported models into embeddable, accessible SVG.</p><pre class="code-block"><code><span class="code-keyword">$svg</span> = SvgRenderer::scatter([<span class="code-string">[\'x\' =&gt; 1, \'y\' =&gt; 3]</span>, <span class="code-string">[\'x\' =&gt; 2, \'y\' =&gt; 4]</span>]);<br><span class="code-keyword">$formula</span> = SvgRenderer::formula(<span class="code-string">\'Pythagorean theorem\'</span>, <span class="code-string">\'a² + b² = c²\'</span>);</code></pre><div class="guide-grid"><div><h3>Accessibility</h3><p>Every helper emits an image role, an ARIA label, and readable fallback text. Add a visible summary beside dense graphics.</p></div><div><h3>Portability</h3><p>Use formula, dependency, line, area, histogram, matrix, system, calculus, root, scatter, polar, vector-field, and geometry helpers across web, PDF, and mobile clients.</p></div><div><h3>Unit labels</h3><p>Decorate any visual with <code>UnitLabels::withAxes()</code> so axis units travel with the renderer-neutral data and SVG accessibility label.</p></div></div>'],
+        'explaining-bvp' => ['Explaining add-on', 'Boundary-value ODEs', 'Find a bounded trajectory that satisfies two endpoint constraints with explicit shooting evidence.', '<h2>Shoot toward the second boundary.</h2><p><code>NumericalBoundaryValueOdeAnalyzer</code> accepts a scalar second-order equation such as <code>y\'\' = -k*y</code>, values for <code>y(a)</code> and <code>y(b)</code>, and finite grid/search limits.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> NumericalBoundaryValueOdeAnalyzer())-&gt;analyze(<span class="code-string">\"y\'\' = 0\"</span>, <span class="code-string">\'0\'</span>, <span class="code-string">\'1\'</span>);<br><span class="code-comment">// initialSlope ≈ 1; endpoint residual ≈ 0</span></code></pre><p>The analyzer integrates candidate slopes with RK4 and refines the endpoint residual with bracketed and guarded secant steps. Inspect <code>solution[\'boundary\']</code>, <code>solution[\'iterations\']</code>, and <code>solution[\'points\']</code> together.</p><div class="guide-note"><strong>Numerical scope:</strong><span>This finds one local trajectory when the residual meets tolerance. It does not prove uniqueness or enumerate every solution, and higher-order, multi-point, singular, or derivative boundary conditions remain unsupported.</span></div>'],
     ];
     if (!isset($guides[$guide])) {
         return renderDocs();
     }
     [$eyebrow, $title, $description, $body] = $guides[$guide];
     $coreNav = ['getting-started' => 'Getting started', 'grammar' => 'Grammar & precedence', 'functions' => 'Functions & variables', 'errors' => 'Errors & spans', 'limits' => 'Resource limits', 'api' => 'PHP API'];
-    $addonNav = ['explaining-steps' => 'Explaining · Steps', 'explaining-translations' => 'Explaining · Translations', 'explaining-equations' => 'Explaining · Equations', 'explaining-systems' => 'Explaining · Systems', 'explaining-matrices' => 'Explaining · Matrices', 'explaining-calculus' => 'Explaining · Calculus', 'explaining-area' => 'Explaining · Areas', 'explaining-roots' => 'Explaining · Roots', 'explaining-statistics' => 'Explaining · Statistics', 'visuals-plots' => 'Visuals · Plots', 'visuals-rendering' => 'Visuals · Rendering', 'visuals-analysis' => 'Visuals · Analysis'];
+    $addonNav = ['explaining-steps' => 'Explaining · Steps', 'explaining-translations' => 'Explaining · Translations', 'explaining-equations' => 'Explaining · Equations', 'explaining-bvp' => 'Explaining · Boundary ODEs', 'explaining-systems' => 'Explaining · Systems', 'explaining-matrices' => 'Explaining · Matrices', 'explaining-calculus' => 'Explaining · Calculus', 'explaining-area' => 'Explaining · Areas', 'explaining-roots' => 'Explaining · Roots', 'explaining-statistics' => 'Explaining · Statistics', 'visuals-plots' => 'Visuals · Plots', 'visuals-rendering' => 'Visuals · Rendering', 'visuals-analysis' => 'Visuals · Analysis'];
     $nav = '';
     foreach (['Core' => $coreNav, 'Add-ons' => $addonNav] as $label => $items) {
         $nav .= '<div class="guide-nav-group"><span>' . e($label) . '</span>';
@@ -840,6 +841,39 @@ function handleNumericalPdeRequest(): never
     exit;
 }
 
+function handleNumericalBoundaryValueOdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalBoundaryValueOdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical boundary-value ODE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalBoundaryValueOdeAnalyzer())->analyze(
+            $string('equation', ''),
+            $string('leftBoundary', '0'),
+            $string('rightBoundary', '0'),
+            $string('dependent', 'y'),
+            $string('independent', 'x'),
+            $number('minimum', 0.0),
+            $number('maximum', 1.0),
+            $integer('steps', 100),
+            $integer('iterations', 40),
+            $number('tolerance', 1e-8),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_ode_boundary_value', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1057,6 +1091,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-second-order-ode', 'endpoint' => '?api=ode-second-numeric', 'input' => "second-order IVP (y'' = f), initial y/y', target, steps", 'visualKinds' => ['differential-equation-second-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-higher-order-ode', 'endpoint' => '?api=ode-higher-numeric', 'input' => 'third- to eighth-order IVP, ordered initial derivative state, target, steps', 'visualKinds' => ['differential-equation-higher-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-pde', 'endpoint' => '?api=pde-numeric', 'input' => 'bounded 1D parabolic PDE, initial profile, Dirichlet boundaries, finite grid/time limits', 'visualKinds' => ['pde-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1164,6 +1199,9 @@ if (($_GET['api'] ?? '') === 'ode-higher-numeric') {
 }
 if (($_GET['api'] ?? '') === 'pde-numeric') {
     handleNumericalPdeRequest();
+}
+if (($_GET['api'] ?? '') === 'ode-boundary-numeric') {
+    handleNumericalBoundaryValueOdeRequest();
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
