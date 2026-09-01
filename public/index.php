@@ -800,6 +800,46 @@ function handleNumericalHigherOrderOdeRequest(): never
     exit;
 }
 
+function handleNumericalPdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalPdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical PDE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $equation = $string('equation', '');
+    $initialProfile = $string('initialProfile', '0');
+    $leftBoundary = $string('leftBoundary', '0');
+    $rightBoundary = $string('rightBoundary', '0');
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalPdeAnalyzer())->analyze(
+            $equation,
+            $initialProfile,
+            $leftBoundary,
+            $rightBoundary,
+            $string('dependent', 'u'),
+            $string('space', 'x'),
+            $string('time', 't'),
+            $number('spaceMinimum', 0.0),
+            $number('spaceMaximum', 1.0),
+            $number('initialTime', 0.0),
+            $number('targetTime', 1.0),
+            $integer('spacePoints', 41),
+            $integer('timeSteps', 100),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_pde_numeric', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1016,6 +1056,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'second-order-ode', 'endpoint' => '?api=ode-second', 'input' => "constant-coefficient second-order ODE, optional y/y' initial values", 'visualKinds' => ['differential-equation-second-order'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-second-order-ode', 'endpoint' => '?api=ode-second-numeric', 'input' => "second-order IVP (y'' = f), initial y/y', target, steps", 'visualKinds' => ['differential-equation-second-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-higher-order-ode', 'endpoint' => '?api=ode-higher-numeric', 'input' => 'third- to eighth-order IVP, ordered initial derivative state, target, steps', 'visualKinds' => ['differential-equation-higher-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-pde', 'endpoint' => '?api=pde-numeric', 'input' => 'bounded 1D parabolic PDE, initial profile, Dirichlet boundaries, finite grid/time limits', 'visualKinds' => ['pde-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1120,6 +1161,9 @@ if (($_GET['api'] ?? '') === 'ode-second-numeric') {
 }
 if (($_GET['api'] ?? '') === 'ode-higher-numeric') {
     handleNumericalHigherOrderOdeRequest();
+}
+if (($_GET['api'] ?? '') === 'pde-numeric') {
+    handleNumericalPdeRequest();
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
