@@ -102,7 +102,7 @@ try {
 
     $capabilities = requestJson($baseUrl, '/?api=capabilities');
     $capabilityIds = array_column($capabilities['body']['capabilities'] ?? [], 'id');
-    foreach (['evaluate', 'complex-evaluate', 'complex-equation', 'explain', 'piecewise', 'piecewise-equation', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain', 'numerical-second-order-ode', 'recurrence', 'limit'] as $id) {
+    foreach (['evaluate', 'complex-evaluate', 'complex-equation', 'explain', 'piecewise', 'piecewise-equation', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain', 'numerical-second-order-ode', 'numerical-higher-order-ode', 'recurrence', 'limit'] as $id) {
         check(in_array($id, $capabilityIds, true), 'capabilities lists ' . $id);
     }
     $capabilityAvailability = [];
@@ -114,7 +114,7 @@ try {
         }
     }
     check(($capabilityAvailability['evaluate'] ?? false) === true, 'core evaluate capability is available');
-    foreach (['complex-evaluate', 'complex-equation', 'explain', 'piecewise', 'piecewise-equation', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'area', 'root', 'statistics', 'units', 'unit-explain', 'plot', 'numerical-second-order-ode', 'recurrence', 'limit'] as $id) {
+    foreach (['complex-evaluate', 'complex-equation', 'explain', 'piecewise', 'piecewise-equation', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'area', 'root', 'statistics', 'units', 'unit-explain', 'plot', 'numerical-second-order-ode', 'numerical-higher-order-ode', 'recurrence', 'limit'] as $id) {
         check(($capabilityAvailability[$id] ?? true) === $requireOptional, 'optional capability availability matches runtime for ' . $id);
     }
 
@@ -162,6 +162,7 @@ try {
         'piecewise' => ['path' => '/?api=piecewise', 'payload' => ['expression' => 'piecewise(x < 0: -x; otherwise: x)', 'variables' => ['x' => -3]], 'success' => static fn (array $body): bool => ($body['result']['value'] ?? null) === 3 && ($body['result']['branch'] ?? null) === 1 && count($body['result']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
         'piecewise-equation' => ['path' => '/?api=piecewise-equation', 'payload' => ['equation' => 'piecewise(x < 0: -x; otherwise: x) = 3', 'variable' => 'x', 'minimum' => -5, 'maximum' => 5, 'samples' => 128], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'partial' && count($body['analysis']['solutions']['roots'] ?? []) === 2 && ($body['analysis']['solutions']['complete'] ?? true) === false, 'unavailable' => 'explain.unavailable'],
         'numerical-second-order-ode' => ['path' => '/?api=ode-second-numeric', 'payload' => ['equation' => "y'' = -y", 'dependent' => 'y', 'independent' => 'x', 'initialIndependent' => 0, 'initialValue' => 1, 'initialDerivative' => 0, 'targetIndependent' => 1.5707963267948966, 'steps' => 100], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && abs((float) ($body['analysis']['solution']['final']['y'] ?? NAN)) < 1e-7, 'unavailable' => 'explain.unavailable'],
+        'numerical-higher-order-ode' => ['path' => '/?api=ode-higher-numeric', 'payload' => ['equation' => "y''' = -y'", 'dependent' => 'y', 'independent' => 'x', 'initial' => [0, 1, 0], 'targetIndependent' => 1.5707963267948966, 'steps' => 160], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['solution']['order'] ?? null) === 3 && abs((float) ($body['analysis']['solution']['final']['values'][0] ?? NAN) - 1.0) < 1e-7, 'unavailable' => 'explain.unavailable'],
         'recurrence' => ['path' => '/?api=recurrence', 'payload' => ['recurrence' => 'a(n+1) = 2*a(n) + 1', 'initial' => ['0' => 1], 'terms' => 5], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['sequence']['4'] ?? null) === 31, 'unavailable' => 'explain.unavailable'],
         'limit' => ['path' => '/?api=limit', 'payload' => ['expression' => 'sin(x) / x', 'variable' => 'x', 'point' => 0, 'direction' => 'both', 'samples' => 14], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && abs((float) ($body['analysis']['limit'] ?? NAN) - 1.0) < 1e-7 && ($body['analysis']['solution']['complete'] ?? true) === false, 'unavailable' => 'explain.unavailable'],
         'complex-evaluate' => ['path' => '/?api=complex-evaluate', 'payload' => ['expression' => 'sqrt(-1) + 2*i', 'variables' => []], 'success' => static fn (array $body): bool => abs((float) ($body['result']['real'] ?? NAN)) < 1e-10 && abs((float) ($body['result']['imaginary'] ?? NAN) - 3.0) < 1e-10, 'unavailable' => 'explain.unavailable'],

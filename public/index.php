@@ -773,6 +773,33 @@ function handleNumericalSecondOrderOdeRequest(): never
     exit;
 }
 
+function handleNumericalHigherOrderOdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalHigherOrderOdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical higher-order ODE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $dependent = is_array($payload) && is_string($payload['dependent'] ?? null) ? $payload['dependent'] : 'y';
+    $independent = is_array($payload) && is_string($payload['independent'] ?? null) ? $payload['independent'] : 'x';
+    $initialIndependent = is_array($payload) && is_numeric($payload['initialIndependent'] ?? null) ? (float) $payload['initialIndependent'] : 0.0;
+    $targetIndependent = is_array($payload) && is_numeric($payload['targetIndependent'] ?? null) ? (float) $payload['targetIndependent'] : 1.0;
+    $steps = is_array($payload) && is_numeric($payload['steps'] ?? null) ? (int) $payload['steps'] : 100;
+    $rawInitial = is_array($payload) && is_array($payload['initial'] ?? null) ? $payload['initial'] : [];
+    $rawKnown = is_array($payload) && is_array($payload['known'] ?? null) ? $payload['known'] : [];
+    try {
+        $initial = normalizeInitialValues($rawInitial);
+        ksort($initial, SORT_NUMERIC);
+        $analysis = (new \MathPHP\Explaining\NumericalHigherOrderOdeAnalyzer())->analyze($equation, array_values($initial), $dependent, $independent, $initialIndependent, $targetIndependent, $steps, normalizeVariables($rawKnown));
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_ode_higher_numeric', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -988,6 +1015,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-ode-system', 'endpoint' => '?api=ode-system', 'input' => "coupled first-order IVP system, variables, initial state, target, steps", 'visualKinds' => ['differential-equation-system-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'second-order-ode', 'endpoint' => '?api=ode-second', 'input' => "constant-coefficient second-order ODE, optional y/y' initial values", 'visualKinds' => ['differential-equation-second-order'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-second-order-ode', 'endpoint' => '?api=ode-second-numeric', 'input' => "second-order IVP (y'' = f), initial y/y', target, steps", 'visualKinds' => ['differential-equation-second-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-higher-order-ode', 'endpoint' => '?api=ode-higher-numeric', 'input' => 'third- to eighth-order IVP, ordered initial derivative state, target, steps', 'visualKinds' => ['differential-equation-higher-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1089,6 +1117,9 @@ if (($_GET['api'] ?? '') === 'ode-second') {
 }
 if (($_GET['api'] ?? '') === 'ode-second-numeric') {
     handleNumericalSecondOrderOdeRequest();
+}
+if (($_GET['api'] ?? '') === 'ode-higher-numeric') {
+    handleNumericalHigherOrderOdeRequest();
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
