@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "mathphp/mathphp",
-            "version": "v0.3.3",
+            "version": "v0.3.4",
             "source": {
                 "type": "git",
                 "url": "git@github.com:mathphp/mathphp.git",
-                "reference": "15077cb338916315b3528ec1ac9410776c743e9f"
+                "reference": "a80eedabae327c55c52e4ae8a0f1ee3301fde284"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/15077cb338916315b3528ec1ac9410776c743e9f",
-                "reference": "15077cb338916315b3528ec1ac9410776c743e9f",
+                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/a80eedabae327c55c52e4ae8a0f1ee3301fde284",
+                "reference": "a80eedabae327c55c52e4ae8a0f1ee3301fde284",
                 "shasum": ""
             },
             "require": {
@@ -74,7 +74,7 @@
                 "parser",
                 "safe-evaluation"
             ],
-            "time": "2026-09-01T09:02:10+00:00"
+            "time": "2026-09-01T09:12:45+00:00"
         }
     ],
     "packages-dev": [],
