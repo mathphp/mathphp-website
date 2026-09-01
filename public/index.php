@@ -564,6 +564,26 @@ function handleDifferentialEquationRequest(): never
     exit;
 }
 
+function handleNumericalOdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalOdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical ODE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $dependent = is_array($payload) && is_string($payload['dependent'] ?? null) ? $payload['dependent'] : 'y';
+    $independent = is_array($payload) && is_string($payload['independent'] ?? null) ? $payload['independent'] : 'x';
+    $initialIndependent = is_array($payload) && is_numeric($payload['initialIndependent'] ?? null) ? (float) $payload['initialIndependent'] : 0.0;
+    $initialValue = is_array($payload) && is_numeric($payload['initialValue'] ?? null) ? (float) $payload['initialValue'] : 0.0;
+    $targetIndependent = is_array($payload) && is_numeric($payload['targetIndependent'] ?? null) ? (float) $payload['targetIndependent'] : 1.0;
+    $steps = is_array($payload) && is_numeric($payload['steps'] ?? null) ? (int) $payload['steps'] : 100;
+    $analysis = (new \MathPHP\Explaining\NumericalOdeAnalyzer())->analyze($equation, $dependent, $independent, $initialIndependent, $initialValue, $targetIndependent, $steps);
+    echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -725,6 +745,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'linear-system-general', 'endpoint' => '?api=linear-system', 'input' => 'affine equations, known parameters', 'visualKinds' => ['linear-system-general'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'nonlinear-system', 'endpoint' => '?api=nonlinear-system', 'input' => 'nonlinear equations (square/overdetermined), variables, initial value(s), iterations', 'visualKinds' => ['nonlinear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'differential-equation', 'endpoint' => '?api=ode', 'input' => "first-order linear ODE (y' = a·y + b), optional initial condition", 'visualKinds' => ['differential-equation'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-ode', 'endpoint' => '?api=ode-numeric', 'input' => "first-order IVP (y' = f(x,y)), initial/target coordinates, steps", 'visualKinds' => ['differential-equation-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -800,6 +821,9 @@ if (($_GET['api'] ?? '') === 'nonlinear-system') {
 }
 if (($_GET['api'] ?? '') === 'ode') {
     handleDifferentialEquationRequest();
+}
+if (($_GET['api'] ?? '') === 'ode-numeric') {
+    handleNumericalOdeRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();
