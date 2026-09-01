@@ -42,6 +42,7 @@
   const result = document.querySelector('#result');
   const button = document.querySelector('#evaluate');
   const explainButton = document.querySelector('#explain');
+  const piecewiseButton = document.querySelector('#piecewise');
   const analyzeButton = document.querySelector('#analyze');
   const plotButton = document.querySelector('#plot');
   const systemButton = document.querySelector('#analyze-system');
@@ -93,6 +94,7 @@
     : capabilitiesReady && capabilityAvailability.get(id) === true;
   const capabilityLabel = (id) => ({
     explain: 'the Explaining add-on',
+    piecewise: 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
     'numerical-equation': 'the Explaining add-on',
@@ -142,6 +144,7 @@
     }
     setControlAvailability(button, activeEngine === 'units' ? 'units' : 'evaluate');
     setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
+    setControlAvailability(piecewiseButton, 'piecewise');
     setControlAvailability(analyzeButton, 'equation');
     setControlAvailability(numericalEquationButton, 'numerical-equation');
     setControlAvailability(plotButton, 'plot');
@@ -344,6 +347,23 @@
     }
   };
 
+  const evaluatePiecewise = async () => {
+    const serial = beginRequest();
+    piecewiseButton.disabled = true;
+    try {
+      const parsed = readVariables();
+      if (!parsed.ok) return;
+      const response = await fetch('?api=piecewise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variables: parsed.value }) });
+      const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
+      if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
+      const piece = data.result;
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">⌘</span><div><span class="explanation-label">piecewise · branch ${escapeHtml(piece.branch)}</span><strong>${escapeHtml(piece.value)}</strong><span class="explanation-hint">Selected ${escapeHtml(piece.condition)} → ${escapeHtml(piece.selectedExpression)}</span></div></div><ol class="step-list" aria-label="Piecewise evaluation steps">${piece.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Piecewise');
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the piecewise evaluator.</strong><span>Check that the private explaining package is installed.</span>', 'result-error'); }
+    finally { refreshCapabilityControls(); }
+  };
+
   const analyze = async () => {
     const serial = beginRequest();
     analyzeButton.disabled = true;
@@ -497,6 +517,7 @@
 
   button.addEventListener('click', run);
   explainButton.addEventListener('click', explain);
+  piecewiseButton?.addEventListener('click', evaluatePiecewise);
   analyzeButton.addEventListener('click', analyze);
   numericalEquationButton?.addEventListener('click', solveNumerically);
   plotButton.addEventListener('click', plot);
