@@ -913,6 +913,43 @@ function handleNumericalEllipticPdeRequest(): never
     exit;
 }
 
+function handleNumericalWavePdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalWavePdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical wave PDE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalWavePdeAnalyzer())->analyze(
+            $string('equation', ''),
+            $string('initialDisplacement', '0'),
+            $string('initialVelocity', '0'),
+            $string('leftBoundary', '0'),
+            $string('rightBoundary', '0'),
+            $string('dependent', 'u'),
+            $string('space', 'x'),
+            $string('time', 't'),
+            $number('spaceMinimum', 0.0),
+            $number('spaceMaximum', 1.0),
+            $number('initialTime', 0.0),
+            $number('targetTime', 1.0),
+            $integer('spacePoints', 41),
+            $integer('timeSteps', 100),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_pde_wave', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1132,6 +1169,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-pde', 'endpoint' => '?api=pde-numeric', 'input' => 'bounded 1D parabolic PDE, initial profile, Dirichlet boundaries, finite grid/time limits', 'visualKinds' => ['pde-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-elliptic-pde', 'endpoint' => '?api=pde-elliptic-numeric', 'input' => 'bounded 2D elliptic PDE, four Dirichlet edges, finite grid and iteration limits', 'visualKinds' => ['differential-equation-elliptic-pde'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-wave-pde', 'endpoint' => '?api=pde-wave-numeric', 'input' => 'bounded 1D wave PDE, initial displacement/velocity, Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-wave'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1245,6 +1283,9 @@ if (($_GET['api'] ?? '') === 'ode-boundary-numeric') {
 }
 if (($_GET['api'] ?? '') === 'pde-elliptic-numeric') {
     handleNumericalEllipticPdeRequest();
+}
+if (($_GET['api'] ?? '') === 'pde-wave-numeric') {
+    handleNumericalWavePdeRequest();
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
