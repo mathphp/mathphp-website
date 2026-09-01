@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fb9349cadc35e2ed43c9e46ecd1374a9",
+    "content-hash": "afbf13e5992cab44f2e0f031d0e3c3ed",
     "packages": [
         {
             "name": "mathphp/mathphp",
-            "version": "v0.2.0",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mathphp/mathphp.git",
-                "reference": "6a453e42a04b9369cdf28e9a3ce47a41334b4958"
+                "url": "git@github.com:mathphp/mathphp.git",
+                "reference": "89d9c00b175f07f74b19747c704c2ece77ef3510"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/6a453e42a04b9369cdf28e9a3ce47a41334b4958",
-                "reference": "6a453e42a04b9369cdf28e9a3ce47a41334b4958",
+                "url": "https://api.github.com/repos/mathphp/mathphp/zipball/89d9c00b175f07f74b19747c704c2ece77ef3510",
+                "reference": "89d9c00b175f07f74b19747c704c2ece77ef3510",
                 "shasum": ""
             },
             "require": {
@@ -74,11 +74,7 @@
                 "parser",
                 "safe-evaluation"
             ],
-            "support": {
-                "source": "https://github.com/mathphp/mathphp/tree/v0.2.0",
-                "issues": "https://github.com/mathphp/mathphp/issues"
-            },
-            "time": "2026-09-01T07:42:05+00:00"
+            "time": "2026-09-01T07:59:20+00:00"
         }
     ],
     "packages-dev": [],
