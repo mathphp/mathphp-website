@@ -102,7 +102,7 @@ try {
 
     $capabilities = requestJson($baseUrl, '/?api=capabilities');
     $capabilityIds = array_column($capabilities['body']['capabilities'] ?? [], 'id');
-    foreach (['evaluate', 'explain', 'equation', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain'] as $id) {
+    foreach (['evaluate', 'complex-evaluate', 'complex-equation', 'explain', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'plot', 'area', 'root', 'statistics', 'units', 'unit-explain'] as $id) {
         check(in_array($id, $capabilityIds, true), 'capabilities lists ' . $id);
     }
     $capabilityAvailability = [];
@@ -114,7 +114,7 @@ try {
         }
     }
     check(($capabilityAvailability['evaluate'] ?? false) === true, 'core evaluate capability is available');
-    foreach (['explain', 'equation', 'system', 'matrix', 'calculus', 'area', 'root', 'statistics', 'units', 'unit-explain', 'plot'] as $id) {
+    foreach (['complex-evaluate', 'complex-equation', 'explain', 'equation', 'inequality', 'system', 'matrix', 'calculus', 'area', 'root', 'statistics', 'units', 'unit-explain', 'plot'] as $id) {
         check(($capabilityAvailability[$id] ?? true) === $requireOptional, 'optional capability availability matches runtime for ' . $id);
     }
 
@@ -153,7 +153,10 @@ try {
 
     $optionalChecks = [
         'explain' => ['path' => '/?api=explain', 'payload' => ['expression' => '(5*2)*2', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['explanation']['result'] ?? null) === 20 && count($body['explanation']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
+        'complex-evaluate' => ['path' => '/?api=complex-evaluate', 'payload' => ['expression' => 'sqrt(-1) + 2*i', 'variables' => []], 'success' => static fn (array $body): bool => abs((float) ($body['result']['real'] ?? NAN)) < 1e-10 && abs((float) ($body['result']['imaginary'] ?? NAN) - 3.0) < 1e-10, 'unavailable' => 'explain.unavailable'],
+        'complex-equation' => ['path' => '/?api=complex-equation', 'payload' => ['equation' => 'z^2 + 1 = 0', 'variable' => 'z', 'initial' => ['real' => 0.2, 'imaginary' => 0.9]], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && abs((float) ($body['analysis']['solution']['root']['real'] ?? NAN)) < 1e-6, 'unavailable' => 'explain.unavailable'],
         'equation' => ['path' => '/?api=analyze', 'payload' => ['equation' => '1*x^2 + 0*x + 1 = 5', 'known' => []], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && count($body['analysis']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
+        'inequality' => ['path' => '/?api=inequality', 'payload' => ['inequality' => 'x^2 > 0', 'variable' => 'x', 'minimum' => -2, 'maximum' => 2], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['solutions']['complete'] ?? false) === true && ($body['analysis']['solutions']['method'] ?? null) === 'exact-polynomial-sign-chart', 'unavailable' => 'explain.unavailable'],
         'system' => ['path' => '/?api=system', 'payload' => ['system' => '2*x + 3*y = 8; 1*x - 1*y = 1'], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && count($body['analysis']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
         'matrix' => ['path' => '/?api=matrix', 'payload' => ['matrix' => [[1, 2], [3, 4]]], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && isset($body['analysis']['result']['determinant']), 'unavailable' => 'explain.unavailable'],
         'calculus' => ['path' => '/?api=calculus', 'payload' => ['operation' => 'derivative', 'expression' => 'x^2 + 3*x', 'variable' => 'x'], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['result'] ?? null) === '2x + 3', 'unavailable' => 'explain.unavailable'],
