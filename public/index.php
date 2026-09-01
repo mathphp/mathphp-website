@@ -264,6 +264,11 @@ function renderCoupledParabolicPdeGuide(): string
     return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Explaining add-on</div><h1>Coupled<br><em>reaction–diffusion.</em></h1><p>Integrate multiple interacting fields on one bounded one-dimensional grid while retaining each trajectory and the stability evidence behind the approximation.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><a class="guide-back" href="?page=docs">← All documentation</a><h2>What it supports</h2><p><code>NumericalCoupledParabolicPdeAnalyzer</code> accepts one time-derivative equality per field, with reaction coupling and affine spatial second derivatives.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> NumericalCoupledParabolicPdeAnalyzer())-&gt;analyze(<span class="code-string">\'u_t = u_xx + v; v_t = v_xx - u\'</span>, [<span class="code-string">\'u\'</span>, <span class="code-string">\'v\'</span>], [<span class="code-string">\'u\'</span> =&gt; <span class="code-string">\'sin(pi()*x)\'</span>, <span class="code-string">\'v\'</span> =&gt; <span class="code-string">\'0\'</span>], [<span class="code-string">\'u\'</span> =&gt; <span class="code-string">\'0\'</span>, <span class="code-string">\'v\'</span> =&gt; <span class="code-string">\'0\'</span>], [<span class="code-string">\'u\'</span> =&gt; <span class="code-string">\'0\'</span>, <span class="code-string">\'v\'</span> =&gt; <span class="code-string">\'0\'</span>]);</code></pre><h2>How the system is integrated</h2><div class="guide-grid"><div><span class="feature-number">01</span><h3>Share a grid</h3><p>Every field uses the same spatial points and time levels, so coupling is evaluated consistently.</p></div><div><span class="feature-number">02</span><h3>Diffuse & react</h3><p>Apply the explicit Laplacian update, then evaluate each field’s reaction terms from the same state.</p></div><div><span class="feature-number">03</span><h3>Report evidence</h3><p>Return per-field snapshots, effective step size, CFL metadata, and explicit status.</p></div></div><div class="guide-note"><strong>Scope is intentional:</strong><span>Nonlinear derivative terms, backward diffusion, non-Dirichlet edges, higher-dimensional systems, and symbolic/global PDE solutions remain unsupported. A completed grid is an approximation, never a proof.</span></div></div></section>';
 }
 
+function renderWavePde2DGuide(): string
+{
+    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Explaining add-on</div><h1>Two-dimensional<br><em>wave fields.</em></h1><p>Propagate a bounded wave across a rectangular grid with initial displacement, initial velocity, four fixed edges, and explicit CFL evidence.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><a class="guide-back" href="?page=docs">← All documentation</a><h2>What it supports</h2><p><code>NumericalWavePde2DAnalyzer</code> accepts <code>u_tt = F(x,y,t,u,u_xx,u_yy)</code> when the spatial derivative terms are affine with non-negative wave coefficients.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> NumericalWavePde2DAnalyzer())-&gt;analyze(<span class="code-string">\'u_tt = c^2*(u_xx + u_yy)\'</span>, <span class="code-string">\'sin(pi()*x)*sin(pi()*y)\'</span>, <span class="code-string">\'0\'</span>, <span class="code-string">\'0\'</span>, <span class="code-string">\'0\'</span>, <span class="code-string">\'0\'</span>, <span class="code-string">\'0\'</span>, known: [<span class="code-string">\'c\'</span> =&gt; 1]);</code></pre><h2>How the numerical contract works</h2><div class="guide-grid"><div><span class="feature-number">01</span><h3>Initialize</h3><p>Sample displacement and velocity over the rectangular grid and apply the four Dirichlet edges.</p></div><div><span class="feature-number">02</span><h3>Propagate</h3><p>Use the centered leapfrog update with a first-step velocity correction and a conservative 2D CFL bound.</p></div><div><span class="feature-number">03</span><h3>Report</h3><p>Return time-stamped grids, effective time step, and explicit <code>solved</code>/<code>partial</code> status.</p></div></div><div class="guide-note"><strong>Scope is intentional:</strong><span>Nonlinear or mixed derivative terms, variable boundary types, unstable coefficients, higher dimensions, and symbolic closed forms remain unsupported. A completed grid is an approximation, never a proof.</span></div></div></section>';
+}
+
 function renderGuide(string $guide): string
 {
     if ($guide === 'explaining-pde-2d') {
@@ -271,6 +276,9 @@ function renderGuide(string $guide): string
     }
     if ($guide === 'explaining-pde-coupled') {
         return renderCoupledParabolicPdeGuide();
+    }
+    if ($guide === 'explaining-pde-wave-2d') {
+        return renderWavePde2DGuide();
     }
     if ($guide === 'units-guide') {
         return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Units add-on</div><h1>Expressions with<br><em>something to measure.</em></h1><p>Use explicit quantities in metres, areas, litres, mass, time, temperature, angles, and speeds. The add-on converts compatible values before arithmetic and rejects dimension mistakes.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><h2>Start with a quantity</h2><p>Install the private package, then evaluate the expression through <code>UnitMath</code>:</p><pre class="code-block"><code><span class="code-keyword">$quantity</span> = UnitMath::evaluate(<span class="code-string">\'2m * 6 + 200cm\'</span>);<br><span class="code-comment">// 14 m</span></code></pre><h2>Convert when the output needs a specific unit</h2><p>Use the explicit <code>to</code> operator to change the display unit while keeping the normalized value:</p><pre class="code-block"><code><span class="code-keyword">$distance</span> = UnitMath::evaluate(<span class="code-string">\'25m to km\'</span>);<br><span class="code-comment">// 0.025 km</span></code></pre><h2>Derived quantities work the same way</h2><p>Square and cubic lengths, litres, and registered speeds share dimensions, so compatible values can be combined or converted:</p><pre class="code-block"><code>UnitMath::evaluate(<span class="code-string">\'1L + 500mL\'</span>); <span class="code-comment">// 1.5 L</span><br>UnitMath::evaluate(<span class="code-string">\'60mph to kmh\'</span>); <span class="code-comment">// 96.56064 kmh</span></code></pre><h2>Conversions happen before addition</h2><p><code>200cm</code> is normalized to two metres, so it can be added to <code>12m</code>. Adding <code>2m + 3s</code> fails with the stable <code>units.incompatible_addition</code> error instead of returning a meaningless number.</p><h2>Temperature offsets stay explicit</h2><p>Absolute readings such as <code>20C</code> and <code>10C</code> cannot be added. Subtracting them gives a Kelvin difference: <code>20C - 10C</code> returns <code>10 K</code>; convert with <code>0C to F</code> for <code>32 F</code>.</p><h2>Keep the model in your API</h2><p>A quantity serializes as its normalized numeric value, display unit, dimensions, and formatted label. Pass that object to the explaining add-on to produce translated unit steps, or to the visuals add-on for unit-labelled axes.</p><div class="guide-note"><strong>Scope:</strong><span>The core <code>mathphp/mathphp</code> package remains scalar-only. Units are an opt-in grammar and dependency.</span></div><a class="button button-primary" href="?page=units">See the package details <span>→</span></a></div></section>';
@@ -302,7 +310,7 @@ function renderGuide(string $guide): string
     [$eyebrow, $title, $description, $body] = $guides[$guide];
     $coreNav = ['getting-started' => 'Getting started', 'grammar' => 'Grammar & precedence', 'functions' => 'Functions & variables', 'errors' => 'Errors & spans', 'limits' => 'Resource limits', 'api' => 'PHP API'];
     $addonNav = ['explaining-steps' => 'Explaining · Steps', 'explaining-translations' => 'Explaining · Translations', 'explaining-equations' => 'Explaining · Equations', 'explaining-bvp' => 'Explaining · Boundary ODEs', 'explaining-systems' => 'Explaining · Systems', 'explaining-matrices' => 'Explaining · Matrices', 'explaining-calculus' => 'Explaining · Calculus', 'explaining-area' => 'Explaining · Areas', 'explaining-roots' => 'Explaining · Roots', 'explaining-statistics' => 'Explaining · Statistics', 'visuals-plots' => 'Visuals · Plots', 'visuals-rendering' => 'Visuals · Rendering', 'visuals-analysis' => 'Visuals · Analysis'];
-    $addonNav = ['explaining-pde-2d' => 'Explaining · 2D Parabolic PDE', 'explaining-pde-coupled' => 'Explaining · Coupled Parabolic PDE'] + $addonNav;
+    $addonNav = ['explaining-pde-2d' => 'Explaining · 2D Parabolic PDE', 'explaining-pde-coupled' => 'Explaining · Coupled Parabolic PDE', 'explaining-pde-wave-2d' => 'Explaining · 2D Wave PDE'] + $addonNav;
     $nav = '';
     foreach (['Core' => $coreNav, 'Add-ons' => $addonNav] as $label => $items) {
         $nav .= '<div class="guide-nav-group"><span>' . e($label) . '</span>';
@@ -1083,6 +1091,49 @@ function handleNumericalCoupledParabolicPdeRequest(): never
     exit;
 }
 
+function handleNumericalWavePde2DRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalWavePde2DAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The two-dimensional wave PDE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalWavePde2DAnalyzer())->analyze(
+            $string('equation', ''),
+            $string('initialDisplacement', '0'),
+            $string('initialVelocity', '0'),
+            $string('leftBoundary', '0'),
+            $string('rightBoundary', '0'),
+            $string('bottomBoundary', '0'),
+            $string('topBoundary', '0'),
+            $string('dependent', 'u'),
+            $string('firstCoordinate', 'x'),
+            $string('secondCoordinate', 'y'),
+            $string('time', 't'),
+            $number('firstMinimum', 0.0),
+            $number('firstMaximum', 1.0),
+            $number('secondMinimum', 0.0),
+            $number('secondMaximum', 1.0),
+            $number('initialTime', 0.0),
+            $number('targetTime', 1.0),
+            $integer('firstPoints', 25),
+            $integer('secondPoints', 25),
+            $integer('timeSteps', 100),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_pde_wave_2d', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1303,6 +1354,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-elliptic-pde', 'endpoint' => '?api=pde-elliptic-numeric', 'input' => 'bounded 2D elliptic PDE, four Dirichlet edges, finite grid and iteration limits', 'visualKinds' => ['differential-equation-elliptic-pde'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-wave-pde', 'endpoint' => '?api=pde-wave-numeric', 'input' => 'bounded 1D wave PDE, initial displacement/velocity, Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-wave'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-wave-pde-2d', 'endpoint' => '?api=pde-wave-2d-numeric', 'input' => 'bounded 2D wave PDE, initial displacement/velocity, four Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-wave-2d'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-parabolic-pde-2d', 'endpoint' => '?api=pde-parabolic-2d-numeric', 'input' => 'bounded 2D parabolic PDE, initial field, four Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-heatmap-2d'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-coupled-parabolic-pde', 'endpoint' => '?api=pde-coupled-parabolic-numeric', 'input' => 'bounded coupled 1D parabolic system, per-field profiles and Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-system-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1428,6 +1480,9 @@ if (($_GET['api'] ?? '') === 'pde-parabolic-2d-numeric') {
 if (($_GET['api'] ?? '') === 'pde-coupled-parabolic-numeric') {
     handleNumericalCoupledParabolicPdeRequest();
 }
+if (($_GET['api'] ?? '') === 'pde-wave-2d-numeric') {
+    handleNumericalWavePde2DRequest();
+}
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
 }
@@ -1466,7 +1521,7 @@ if (($_GET['api'] ?? '') === 'version') {
 }
 
 $page = $_GET['page'] ?? 'home';
-$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-pde-2d', 'explaining-pde-coupled', 'explaining-bvp', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
+$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-pde-2d', 'explaining-pde-coupled', 'explaining-pde-wave-2d', 'explaining-bvp', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
 $page = in_array($page, array_merge(['home', 'packages', 'explaining', 'visuals', 'units', 'docs', 'playground', 'pricing'], $guidePages), true) ? $page : 'home';
 $content = match ($page) {
     'packages' => renderPackages(),
