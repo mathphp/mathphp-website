@@ -461,6 +461,47 @@ function handleNumericalEquationRequest(): never
     exit;
 }
 
+function handleInequalityRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\InequalityAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The inequality analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $inequality = is_array($payload) && is_string($payload['inequality'] ?? null) ? $payload['inequality'] : '';
+    $variable = is_array($payload) && is_string($payload['variable'] ?? null) ? $payload['variable'] : 'x';
+    $minimum = is_array($payload) && is_numeric($payload['minimum'] ?? null) ? (float) $payload['minimum'] : -10.0;
+    $maximum = is_array($payload) && is_numeric($payload['maximum'] ?? null) ? (float) $payload['maximum'] : 10.0;
+    $samples = is_array($payload) && is_numeric($payload['samples'] ?? null) ? (int) $payload['samples'] : 512;
+    try {
+        $analysis = (new \MathPHP\Explaining\InequalityAnalyzer())->analyze($inequality, $variable, $minimum, $maximum, $samples);
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_inequality', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
+function handleLinearSystemGeneralRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\LinearSystemAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The general linear-system analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $system = is_array($payload) && is_string($payload['system'] ?? null) ? $payload['system'] : '';
+    $rawKnown = is_array($payload) && is_array($payload['known'] ?? null) ? $payload['known'] : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\LinearSystemAnalyzer())->analyze($system, normalizeVariables($rawKnown));
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_variables', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -618,6 +659,8 @@ function handleCapabilitiesRequest(): never
         ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-equation', 'endpoint' => '?api=solve-equation', 'input' => 'single-variable equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'inequality', 'endpoint' => '?api=inequality', 'input' => 'inequality, variable, finite interval, samples', 'visualKinds' => ['inequality-intervals'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'linear-system-general', 'endpoint' => '?api=linear-system', 'input' => 'affine equations, known parameters', 'visualKinds' => ['linear-system-general'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -681,6 +724,12 @@ if (($_GET['api'] ?? '') === 'analyze') {
 }
 if (($_GET['api'] ?? '') === 'solve-equation') {
     handleNumericalEquationRequest();
+}
+if (($_GET['api'] ?? '') === 'inequality') {
+    handleInequalityRequest();
+}
+if (($_GET['api'] ?? '') === 'linear-system') {
+    handleLinearSystemGeneralRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();
