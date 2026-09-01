@@ -151,13 +151,16 @@ try {
     $notation = requestJson($baseUrl, '/?api=evaluate', ['expression' => '2² + √9', 'variables' => []]);
     check(($notation['body']['ok'] ?? false) === true && abs((float) ($notation['body']['result'] ?? NAN) - 7.0) < 1e-10, 'core evaluates superscript and radical notation');
 
+    $extendedFunctions = requestJson($baseUrl, '/?api=evaluate', ['expression' => 'cbrt(-8) + sec(0) + csc(π/2) + cot(π/4)', 'variables' => []]);
+    check(($extendedFunctions['body']['ok'] ?? false) === true && abs((float) ($extendedFunctions['body']['result'] ?? NAN) - 1.0) < 1e-10, 'core evaluates cube root and reciprocal trigonometric functions');
+
     $error = requestJson($baseUrl, '/?api=evaluate', ['expression' => '10 / 0', 'variables' => []]);
     check(($error['body']['ok'] ?? true) === false && is_string($error['body']['code'] ?? null), 'core returns a structured arithmetic error');
 
     $optionalChecks = [
         'explain' => ['path' => '/?api=explain', 'payload' => ['expression' => '(5*2)*2', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['explanation']['result'] ?? null) === 20 && count($body['explanation']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
         'complex-evaluate' => ['path' => '/?api=complex-evaluate', 'payload' => ['expression' => 'sqrt(-1) + 2*i', 'variables' => []], 'success' => static fn (array $body): bool => abs((float) ($body['result']['real'] ?? NAN)) < 1e-10 && abs((float) ($body['result']['imaginary'] ?? NAN) - 3.0) < 1e-10, 'unavailable' => 'explain.unavailable'],
-        'complex-elementary-expanded' => ['path' => '/?api=complex-evaluate', 'payload' => ['expression' => 'tan(i) + log10(100*i)', 'variables' => []], 'success' => static fn (array $body): bool => abs((float) ($body['result']['real'] ?? NAN) - 2.0) < 1e-10 && abs((float) ($body['result']['imaginary'] ?? NAN) - (tanh(1.0) + M_PI / (2 * log(10.0)))) < 1e-10, 'unavailable' => 'explain.unavailable'],
+        'complex-elementary-expanded' => ['path' => '/?api=complex-evaluate', 'payload' => ['expression' => 'tan(i) + log10(100*i) + sec(0)', 'variables' => []], 'success' => static fn (array $body): bool => abs((float) ($body['result']['real'] ?? NAN) - 3.0) < 1e-10 && abs((float) ($body['result']['imaginary'] ?? NAN) - (tanh(1.0) + M_PI / (2 * log(10.0)))) < 1e-10, 'unavailable' => 'explain.unavailable'],
         'complex-equation' => ['path' => '/?api=complex-equation', 'payload' => ['equation' => 'z^2 + 1 = 0', 'variable' => 'z', 'initial' => ['real' => 0.2, 'imaginary' => 0.9]], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && abs((float) ($body['analysis']['solution']['root']['real'] ?? NAN)) < 1e-6, 'unavailable' => 'explain.unavailable'],
         'equation' => ['path' => '/?api=analyze', 'payload' => ['equation' => '1*x^2 + 0*x + 1 = 5', 'known' => []], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && count($body['analysis']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
         'implicit-equation' => ['path' => '/?api=analyze', 'payload' => ['equation' => '2x + 1 = 9', 'known' => []], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && is_array($body['analysis']['solutions']['roots'] ?? null) && count($body['analysis']['solutions']['roots']) === 1 && (float) $body['analysis']['solutions']['roots'][0] === 4.0, 'unavailable' => 'explain.unavailable'],
