@@ -142,6 +142,7 @@
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
     'numerical-equation': 'the Explaining add-on',
+    'numerical-parabolic-pde-2d': 'the Explaining add-on',
     system: 'the Explaining add-on',
     matrix: 'the Explaining add-on',
     calculus: 'the Explaining add-on',

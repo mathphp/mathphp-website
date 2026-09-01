@@ -202,13 +202,13 @@ function renderPackage(string $package): string
         ? 'A private extension that observes the same deterministic evaluator and turns each completed node into a useful, translatable lesson.'
         : ($units ? 'A private extension for dimensional quantities, conversions, and readable expressions such as 2m * 6 + 200cm or 25m to km.' : 'A private extension that keeps visual output structured first, with accessible SVG and image-ready fallbacks when a frontend renderer is not available.');
     $features = $explaining
-        ? '<li>Post-order steps with dependencies</li><li>Substitutions, partial results, and exact spans</li><li>Closed-form analyzers for common equations and systems</li><li>Bounded numerical roots for any Core expression equality</li><li>English and Danish translations</li><li>Custom observers without changing core semantics</li>'
+        ? '<li>Post-order steps with dependencies</li><li>Substitutions, partial results, and exact spans</li><li>Closed-form analyzers for common equations and systems</li><li>Bounded numerical roots for any Core expression equality</li><li>ODE and bounded PDE analyzers with explicit scope</li><li>English and Danish translations</li><li>Custom observers without changing core semantics</li>'
         : ($units ? '<li>Length, area, volume, mass, time, temperature, and angle units</li><li>Litres, square/cubic lengths, and explicit speed units</li><li>Automatic conversion before compatible addition</li><li>Dimensional algebra with stable errors</li>' : '<li>Line plots, areas, roots, and histograms</li><li>Equation, matrix, system, and calculus models</li><li>Renderer-neutral data for your own frontend</li><li>Accessible SVG and image-ready data URIs</li>');
     $example = $explaining
         ? '<div class="package-code"><span class="code-comment">// explain a scalar expression</span><br><span class="code-keyword">$result</span> = (<span class="code-keyword">new</span> Explainer(Translations::create(<span class="code-string">\'en\'</span>)))-&gt;explain(<span class="code-string">\'(5*2)*2\'</span>);<br><br><span class="code-comment">// solve a mixed equation numerically</span><br><span class="code-keyword">$roots</span> = (<span class="code-keyword">new</span> NumericalEquationAnalyzer())-&gt;analyze(<span class="code-string">\'sin(x) = x / 2\'</span>, <span class="code-string">\'x\'</span>, -8, 8);</div>'
         : ($units ? '<div class="package-code"><span class="code-comment">// normalize compatible quantities</span><br><span class="code-keyword">$total</span> = UnitMath::evaluate(<span class="code-string">\'2m * 6 + 200cm\'</span>);<br><span class="code-comment">// 14 m</span><br><span class="code-keyword">$distance</span> = UnitMath::evaluate(<span class="code-string">\'25m to km\'</span>);<br><span class="code-comment">// 0.025 km</span></div>' : '<div class="package-code"><span class="code-comment">// keep data and presentation separate</span><br><span class="code-keyword">$plot</span> = (<span class="code-keyword">new</span> Plotter())-&gt;plot(<span class="code-string">\'sin(x)\'</span>, <span class="code-string">\'x\'</span>, 0, 6.28);</div>');
     $install = $explaining
-        ? '<div class="package-code package-install"><span class="code-comment"># add approved private VCS sources</span><br>composer config repositories.mathphp-visuals vcs https://github.com/mathphp/mathphp-visuals.git<br>composer config repositories.mathphp-explaining vcs https://github.com/mathphp/mathphp-explaining.git<br>composer require mathphp/mathphp-visuals:^0.3 mathphp/mathphp-explaining:^0.28</div>'
+        ? '<div class="package-code package-install"><span class="code-comment"># add approved private VCS sources</span><br>composer config repositories.mathphp-visuals vcs https://github.com/mathphp/mathphp-visuals.git<br>composer config repositories.mathphp-explaining vcs https://github.com/mathphp/mathphp-explaining.git<br>composer require mathphp/mathphp-visuals:^0.3 mathphp/mathphp-explaining:^0.40</div>'
         : ($units ? '<div class="package-code package-install"><span class="code-comment"># add the approved private VCS source</span><br>composer config repositories.mathphp-units vcs https://github.com/mathphp/mathphp-units.git<br>composer require mathphp/mathphp-units:^0.3</div>' : '<div class="package-code package-install"><span class="code-comment"># add the approved private VCS source</span><br>composer config repositories.mathphp-visuals vcs https://github.com/mathphp/mathphp-visuals.git<br>composer require mathphp/mathphp-visuals:^0.3</div>');
     $showcase = $explaining
         ? '<div class="showcase-card showcase-card-dark"><div class="showcase-top"><span>Expression</span><code>(5 × 2) × 2</code></div><ol class="step-list light"><li><span class="step-index">1</span><span><strong>Multiply 5 by 2</strong><small>5 × 2 = 10</small></span><b>10</b></li><li><span class="step-index">2</span><span><strong>Multiply the partial result by 2</strong><small>10 × 2 = 20</small></span><b>20</b></li></ol><div class="showcase-result"><span>Final result</span><strong>20</strong></div></div>'
@@ -254,8 +254,16 @@ function renderDocs(): string
         . '<section class="docs-addons wrap"><div class="section-kicker">Private add-ons</div><h2>When a number needs a lesson, a picture, or a measurement.</h2><div class="addon-doc-grid"><a href="?page=explaining-steps"><span class="addon-doc-mark">01</span><strong>Explaining</strong><small>Steps, translations, observers, analyzers</small><em>Explore the teaching layer →</em></a><a href="?page=visuals-plots"><span class="addon-doc-mark">02</span><strong>Visuals</strong><small>Plots, models, SVG fallbacks</small><em>Explore the presentation layer →</em></a><a href="?page=units-guide"><span class="addon-doc-mark">03</span><strong>Units</strong><small>Dimensions, conversions, display values</small><em>Explore the measurement layer →</em></a></div><div class="docs-principles"><div><strong>Core first</strong><span>Every add-on accepts the same validated inputs as the public evaluator.</span></div><div><strong>Models over markup</strong><span>Return arrays and representations your web, mobile, or CLI client can consume.</span></div><div><strong>License-aware</strong><span>Private packages have separate licenses; their distribution and access model remains a product decision.</span></div></div></section>';
 }
 
+function renderParabolicPdeGuide(): string
+{
+    return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Explaining add-on</div><h1>Two-dimensional<br><em>parabolic fields.</em></h1><p>Integrate bounded heat and diffusion equations on a rectangular grid while retaining the initial field, Dirichlet edges, effective time step, and stability evidence.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><a class="guide-back" href="?page=docs">← All documentation</a><h2>What it supports</h2><p><code>NumericalParabolicPdeAnalyzer</code> accepts <code>u_t = F(x,y,t,u,u_xx,u_yy)</code> when the spatial second-derivative terms are affine with non-negative diffusion coefficients.</p><pre class="code-block"><code><span class="code-keyword">$analysis</span> = (<span class="code-keyword">new</span> NumericalParabolicPdeAnalyzer())-&gt;analyze(<span class="code-string">\'u_t = alpha*u_xx + beta*u_yy\'</span>, <span class="code-string">\'1\'</span>, <span class="code-string">\'1\'</span>, <span class="code-string">\'1\'</span>, <span class="code-string">\'1\'</span>, <span class="code-string">\'1\'</span>, known: [<span class="code-string">\'alpha\'</span> =&gt; 0.1, <span class="code-string">\'beta\'</span> =&gt; 0.1]);</code></pre><h2>How the numerical contract works</h2><div class="guide-grid"><div><span class="feature-number">01</span><h3>Initialize</h3><p>Sample the initial profile and replace its edges with the four supplied Dirichlet boundary expressions.</p></div><div><span class="feature-number">02</span><h3>Diffuse</h3><p>Apply the five-point explicit stencil to each interior node at every controlled substep.</p></div><div><span class="feature-number">03</span><h3>Report</h3><p>Return time-stamped grids, step size, substep count, and explicit <code>solved</code>/<code>partial</code> status.</p></div></div><div class="guide-note"><strong>Scope is intentional:</strong><span>Mixed or nonlinear derivative terms, backward diffusion, Neumann/Robin/periodic edges, unstable grids, higher dimensions, and symbolic closed forms remain unsupported. A completed grid is an approximation, never a proof of every PDE solution.</span></div></div></section>';
+}
+
 function renderGuide(string $guide): string
 {
+    if ($guide === 'explaining-pde-2d') {
+        return renderParabolicPdeGuide();
+    }
     if ($guide === 'units-guide') {
         return '<section class="page-intro wrap"><div class="eyebrow"><span class="eyebrow-dot"></span>Units add-on</div><h1>Expressions with<br><em>something to measure.</em></h1><p>Use explicit quantities in metres, areas, litres, mass, time, temperature, angles, and speeds. The add-on converts compatible values before arithmetic and rejects dimension mistakes.</p></section><section class="guide-page wrap"><div class="guide-content guide-content-wide"><h2>Start with a quantity</h2><p>Install the private package, then evaluate the expression through <code>UnitMath</code>:</p><pre class="code-block"><code><span class="code-keyword">$quantity</span> = UnitMath::evaluate(<span class="code-string">\'2m * 6 + 200cm\'</span>);<br><span class="code-comment">// 14 m</span></code></pre><h2>Convert when the output needs a specific unit</h2><p>Use the explicit <code>to</code> operator to change the display unit while keeping the normalized value:</p><pre class="code-block"><code><span class="code-keyword">$distance</span> = UnitMath::evaluate(<span class="code-string">\'25m to km\'</span>);<br><span class="code-comment">// 0.025 km</span></code></pre><h2>Derived quantities work the same way</h2><p>Square and cubic lengths, litres, and registered speeds share dimensions, so compatible values can be combined or converted:</p><pre class="code-block"><code>UnitMath::evaluate(<span class="code-string">\'1L + 500mL\'</span>); <span class="code-comment">// 1.5 L</span><br>UnitMath::evaluate(<span class="code-string">\'60mph to kmh\'</span>); <span class="code-comment">// 96.56064 kmh</span></code></pre><h2>Conversions happen before addition</h2><p><code>200cm</code> is normalized to two metres, so it can be added to <code>12m</code>. Adding <code>2m + 3s</code> fails with the stable <code>units.incompatible_addition</code> error instead of returning a meaningless number.</p><h2>Temperature offsets stay explicit</h2><p>Absolute readings such as <code>20C</code> and <code>10C</code> cannot be added. Subtracting them gives a Kelvin difference: <code>20C - 10C</code> returns <code>10 K</code>; convert with <code>0C to F</code> for <code>32 F</code>.</p><h2>Keep the model in your API</h2><p>A quantity serializes as its normalized numeric value, display unit, dimensions, and formatted label. Pass that object to the explaining add-on to produce translated unit steps, or to the visuals add-on for unit-labelled axes.</p><div class="guide-note"><strong>Scope:</strong><span>The core <code>mathphp/mathphp</code> package remains scalar-only. Units are an opt-in grammar and dependency.</span></div><a class="button button-primary" href="?page=units">See the package details <span>→</span></a></div></section>';
     }
@@ -286,6 +294,7 @@ function renderGuide(string $guide): string
     [$eyebrow, $title, $description, $body] = $guides[$guide];
     $coreNav = ['getting-started' => 'Getting started', 'grammar' => 'Grammar & precedence', 'functions' => 'Functions & variables', 'errors' => 'Errors & spans', 'limits' => 'Resource limits', 'api' => 'PHP API'];
     $addonNav = ['explaining-steps' => 'Explaining · Steps', 'explaining-translations' => 'Explaining · Translations', 'explaining-equations' => 'Explaining · Equations', 'explaining-bvp' => 'Explaining · Boundary ODEs', 'explaining-systems' => 'Explaining · Systems', 'explaining-matrices' => 'Explaining · Matrices', 'explaining-calculus' => 'Explaining · Calculus', 'explaining-area' => 'Explaining · Areas', 'explaining-roots' => 'Explaining · Roots', 'explaining-statistics' => 'Explaining · Statistics', 'visuals-plots' => 'Visuals · Plots', 'visuals-rendering' => 'Visuals · Rendering', 'visuals-analysis' => 'Visuals · Analysis'];
+    $addonNav = ['explaining-pde-2d' => 'Explaining · 2D Parabolic PDE'] + $addonNav;
     $nav = '';
     foreach (['Core' => $coreNav, 'Add-ons' => $addonNav] as $label => $items) {
         $nav .= '<div class="guide-nav-group"><span>' . e($label) . '</span>';
@@ -950,6 +959,48 @@ function handleNumericalWavePdeRequest(): never
     exit;
 }
 
+function handleNumericalParabolicPdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalParabolicPdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical two-dimensional parabolic PDE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalParabolicPdeAnalyzer())->analyze(
+            $string('equation', ''),
+            $string('initialProfile', '0'),
+            $string('leftBoundary', '0'),
+            $string('rightBoundary', '0'),
+            $string('bottomBoundary', '0'),
+            $string('topBoundary', '0'),
+            $string('dependent', 'u'),
+            $string('firstCoordinate', 'x'),
+            $string('secondCoordinate', 'y'),
+            $string('time', 't'),
+            $number('firstMinimum', 0.0),
+            $number('firstMaximum', 1.0),
+            $number('secondMinimum', 0.0),
+            $number('secondMaximum', 1.0),
+            $number('initialTime', 0.0),
+            $number('targetTime', 1.0),
+            $integer('firstPoints', 25),
+            $integer('secondPoints', 25),
+            $integer('timeSteps', 100),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_pde_parabolic', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1170,6 +1221,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-elliptic-pde', 'endpoint' => '?api=pde-elliptic-numeric', 'input' => 'bounded 2D elliptic PDE, four Dirichlet edges, finite grid and iteration limits', 'visualKinds' => ['differential-equation-elliptic-pde'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-wave-pde', 'endpoint' => '?api=pde-wave-numeric', 'input' => 'bounded 1D wave PDE, initial displacement/velocity, Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-wave'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-parabolic-pde-2d', 'endpoint' => '?api=pde-parabolic-2d-numeric', 'input' => 'bounded 2D parabolic PDE, initial field, four Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-heatmap-2d'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1287,6 +1339,9 @@ if (($_GET['api'] ?? '') === 'pde-elliptic-numeric') {
 if (($_GET['api'] ?? '') === 'pde-wave-numeric') {
     handleNumericalWavePdeRequest();
 }
+if (($_GET['api'] ?? '') === 'pde-parabolic-2d-numeric') {
+    handleNumericalParabolicPdeRequest();
+}
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
 }
@@ -1325,7 +1380,7 @@ if (($_GET['api'] ?? '') === 'version') {
 }
 
 $page = $_GET['page'] ?? 'home';
-$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-bvp', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
+$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-pde-2d', 'explaining-bvp', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
 $page = in_array($page, array_merge(['home', 'packages', 'explaining', 'visuals', 'units', 'docs', 'playground', 'pricing'], $guidePages), true) ? $page : 'home';
 $content = match ($page) {
     'packages' => renderPackages(),
