@@ -129,7 +129,7 @@ try {
         '/?page=playground' => 'Make a calculation.',
         '/?page=units-guide' => '25m to km',
         '/?page=explaining-equations' => '1*x^2 + 0*x + 1 = 5',
-        '/?page=explaining-systems' => '2*x + 3*y = 8; 1*x - 1*y = 1',
+        '/?page=explaining-systems' => '2x + 3y = 8; x - y = 1',
         '/?page=explaining-calculus' => 'derivative',
         '/?page=explaining-matrices' => 'determinant',
     ];
