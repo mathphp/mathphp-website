@@ -1241,7 +1241,7 @@ if (($_GET['api'] ?? '') === 'version') {
 }
 
 $page = $_GET['page'] ?? 'home';
-$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
+$guidePages = ['getting-started', 'grammar', 'functions', 'errors', 'limits', 'api', 'units-guide', 'explaining-steps', 'explaining-translations', 'explaining-equations', 'explaining-bvp', 'explaining-systems', 'explaining-matrices', 'explaining-calculus', 'explaining-area', 'explaining-roots', 'explaining-statistics', 'visuals-plots', 'visuals-rendering', 'visuals-analysis'];
 $page = in_array($page, array_merge(['home', 'packages', 'explaining', 'visuals', 'units', 'docs', 'playground', 'pricing'], $guidePages), true) ? $page : 'home';
 $content = match ($page) {
     'packages' => renderPackages(),
