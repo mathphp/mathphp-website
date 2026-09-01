@@ -616,6 +616,25 @@ function handleNumericalOdeSystemRequest(): never
     exit;
 }
 
+function handleSecondOrderOdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\SecondOrderOdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The second-order ODE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $dependent = is_array($payload) && is_string($payload['dependent'] ?? null) ? $payload['dependent'] : 'y';
+    $independent = is_array($payload) && is_string($payload['independent'] ?? null) ? $payload['independent'] : 'x';
+    $initialIndependent = is_array($payload) && is_numeric($payload['initialIndependent'] ?? null) ? (float) $payload['initialIndependent'] : null;
+    $initialValue = is_array($payload) && is_numeric($payload['initialValue'] ?? null) ? (float) $payload['initialValue'] : null;
+    $initialDerivative = is_array($payload) && is_numeric($payload['initialDerivative'] ?? null) ? (float) $payload['initialDerivative'] : null;
+    $analysis = (new \MathPHP\Explaining\SecondOrderOdeAnalyzer())->analyze($equation, $dependent, $independent, $initialIndependent, $initialValue, $initialDerivative);
+    echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -779,6 +798,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'differential-equation', 'endpoint' => '?api=ode', 'input' => "first-order linear ODE (y' = a·y + b), optional initial condition", 'visualKinds' => ['differential-equation'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-ode', 'endpoint' => '?api=ode-numeric', 'input' => "first-order IVP (y' = f(x,y)), initial/target coordinates, steps", 'visualKinds' => ['differential-equation-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-ode-system', 'endpoint' => '?api=ode-system', 'input' => "coupled first-order IVP system, variables, initial state, target, steps", 'visualKinds' => ['differential-equation-system-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'second-order-ode', 'endpoint' => '?api=ode-second', 'input' => "constant-coefficient second-order ODE, optional y/y' initial values", 'visualKinds' => ['differential-equation-second-order'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -860,6 +880,9 @@ if (($_GET['api'] ?? '') === 'ode-numeric') {
 }
 if (($_GET['api'] ?? '') === 'ode-system') {
     handleNumericalOdeSystemRequest();
+}
+if (($_GET['api'] ?? '') === 'ode-second') {
+    handleSecondOrderOdeRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();
