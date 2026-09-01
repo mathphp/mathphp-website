@@ -45,7 +45,7 @@ the requested ref (defaulting to `v0.3.1`) before installing dependencies, and t
 responses expose the resolved revision. Optional package roots also write a
 `.mathphp-revision` marker after checkout; this prevents a dependency lockfile
 from masking the actual add-on source revision running in the container.
-The Explaining add-on defaults to its compatible `v0.22.1` release.
+The Explaining add-on defaults to its compatible `v0.23.0` release.
 The Docker dependency stage also carries an explicit cache key tied to the
 reviewed Core revision, so a remote build cache cannot silently retain older
 Core vendor files after a lockfile update.
