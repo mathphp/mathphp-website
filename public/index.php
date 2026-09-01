@@ -584,6 +584,38 @@ function handleNumericalOdeRequest(): never
     exit;
 }
 
+function handleNumericalOdeSystemRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalOdeSystemAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical ODE-system analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $system = is_array($payload) && is_string($payload['system'] ?? null) ? $payload['system'] : '';
+    $rawVariables = is_array($payload) && is_array($payload['variables'] ?? null) ? $payload['variables'] : [];
+    $independent = is_array($payload) && is_string($payload['independent'] ?? null) ? $payload['independent'] : 't';
+    $rawInitial = is_array($payload) && is_array($payload['initial'] ?? null) ? $payload['initial'] : [];
+    $initialIndependent = is_array($payload) && is_numeric($payload['initialIndependent'] ?? null) ? (float) $payload['initialIndependent'] : 0.0;
+    $targetIndependent = is_array($payload) && is_numeric($payload['targetIndependent'] ?? null) ? (float) $payload['targetIndependent'] : 1.0;
+    $steps = is_array($payload) && is_numeric($payload['steps'] ?? null) ? (int) $payload['steps'] : 100;
+    try {
+        $variables = [];
+        foreach ($rawVariables as $variable) {
+            if (!is_string($variable)) {
+                throw new InvalidArgumentException('Variables must be an array of names.');
+            }
+            $variables[] = $variable;
+        }
+        $initial = normalizeVariables($rawInitial);
+        $analysis = (new \MathPHP\Explaining\NumericalOdeSystemAnalyzer())->analyze($system, $variables, $independent, $initial, $initialIndependent, $targetIndependent, $steps);
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_ode_system', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -746,6 +778,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'nonlinear-system', 'endpoint' => '?api=nonlinear-system', 'input' => 'nonlinear equations (square/overdetermined), variables, initial value(s), iterations', 'visualKinds' => ['nonlinear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'differential-equation', 'endpoint' => '?api=ode', 'input' => "first-order linear ODE (y' = a·y + b), optional initial condition", 'visualKinds' => ['differential-equation'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-ode', 'endpoint' => '?api=ode-numeric', 'input' => "first-order IVP (y' = f(x,y)), initial/target coordinates, steps", 'visualKinds' => ['differential-equation-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-ode-system', 'endpoint' => '?api=ode-system', 'input' => "coupled first-order IVP system, variables, initial state, target, steps", 'visualKinds' => ['differential-equation-system-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -824,6 +857,9 @@ if (($_GET['api'] ?? '') === 'ode') {
 }
 if (($_GET['api'] ?? '') === 'ode-numeric') {
     handleNumericalOdeRequest();
+}
+if (($_GET['api'] ?? '') === 'ode-system') {
+    handleNumericalOdeSystemRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();
