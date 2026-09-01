@@ -75,7 +75,8 @@ private add-ons. To verify a deployment where all optional packages are
 installed, set `MATHPHP_SMOKE_REQUIRE_OPTIONAL=1`; the same script then checks
 the explanation, equation, system, matrix, calculus, area, root, statistics,
 Units, and Visuals success payloads, including precise unit error spans.
-The optional checks also exercise multi-word and separator aliases such as
+The optional checks also cover complex evaluation, complex Newton equations,
+and exact polynomial inequalities. They exercise multi-word and separator aliases such as
 `metres per second` and `mile per hour to km/h`.
 They also guard affine-temperature errors such as scaling an absolute
 `20C` reading.
