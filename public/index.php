@@ -874,6 +874,45 @@ function handleNumericalBoundaryValueOdeRequest(): never
     exit;
 }
 
+function handleNumericalEllipticPdeRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\NumericalEllipticPdeAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The numerical elliptic PDE analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $string = static fn (string $key, string $fallback): string => is_array($payload) && is_string($payload[$key] ?? null) ? $payload[$key] : $fallback;
+    $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
+    $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
+    $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\NumericalEllipticPdeAnalyzer())->analyze(
+            $string('equation', ''),
+            $string('leftBoundary', '0'),
+            $string('rightBoundary', '0'),
+            $string('bottomBoundary', '0'),
+            $string('topBoundary', '0'),
+            $string('dependent', 'u'),
+            $string('firstCoordinate', 'x'),
+            $string('secondCoordinate', 'y'),
+            $number('firstMinimum', 0.0),
+            $number('firstMaximum', 1.0),
+            $number('secondMinimum', 0.0),
+            $number('secondMaximum', 1.0),
+            $integer('firstPoints', 25),
+            $integer('secondPoints', 25),
+            $integer('iterations', 2000),
+            $number('tolerance', 1e-8),
+            $known,
+        );
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_pde_elliptic', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleRecurrenceRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -1092,6 +1131,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-higher-order-ode', 'endpoint' => '?api=ode-higher-numeric', 'input' => 'third- to eighth-order IVP, ordered initial derivative state, target, steps', 'visualKinds' => ['differential-equation-higher-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-pde', 'endpoint' => '?api=pde-numeric', 'input' => 'bounded 1D parabolic PDE, initial profile, Dirichlet boundaries, finite grid/time limits', 'visualKinds' => ['pde-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-elliptic-pde', 'endpoint' => '?api=pde-elliptic-numeric', 'input' => 'bounded 2D elliptic PDE, four Dirichlet edges, finite grid and iteration limits', 'visualKinds' => ['differential-equation-elliptic-pde'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1202,6 +1242,9 @@ if (($_GET['api'] ?? '') === 'pde-numeric') {
 }
 if (($_GET['api'] ?? '') === 'ode-boundary-numeric') {
     handleNumericalBoundaryValueOdeRequest();
+}
+if (($_GET['api'] ?? '') === 'pde-elliptic-numeric') {
+    handleNumericalEllipticPdeRequest();
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
