@@ -513,6 +513,7 @@ function handleNonlinearSystemRequest(): never
     $system = is_array($payload) && is_string($payload['system'] ?? null) ? $payload['system'] : '';
     $rawVariables = is_array($payload) && is_array($payload['variables'] ?? null) ? $payload['variables'] : [];
     $rawInitial = is_array($payload) && is_array($payload['initial'] ?? null) ? $payload['initial'] : [];
+    $rawStarts = is_array($payload) && is_array($payload['starts'] ?? null) ? $payload['starts'] : [];
     $iterations = is_array($payload) && is_numeric($payload['iterations'] ?? null) ? (int) $payload['iterations'] : 32;
     $tolerance = is_array($payload) && is_numeric($payload['tolerance'] ?? null) ? (float) $payload['tolerance'] : 1e-10;
     try {
@@ -524,8 +525,21 @@ function handleNonlinearSystemRequest(): never
             $variables[] = $variable;
         }
         $initial = normalizeVariables($rawInitial);
-        $analysis = (new \MathPHP\Explaining\NonlinearSystemAnalyzer())->analyze($system, $variables, $initial, $iterations, $tolerance);
-        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+        $analyzer = new \MathPHP\Explaining\NonlinearSystemAnalyzer();
+        if ($rawStarts !== []) {
+            $starts = [];
+            foreach ($rawStarts as $rawStart) {
+                if (!is_array($rawStart)) {
+                    throw new InvalidArgumentException('Each nonlinear-system start must be a JSON object.');
+                }
+                $starts[] = normalizeVariables($rawStart);
+            }
+            $analyses = $analyzer->analyzeMany($system, $variables, $starts, $iterations, $tolerance);
+            echo json_encode(['ok' => true, 'analyses' => array_map(static fn ($analysis): array => $analysis->toArray(), $analyses)], JSON_THROW_ON_ERROR);
+        } else {
+            $analysis = $analyzer->analyze($system, $variables, $initial, $iterations, $tolerance);
+            echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+        }
     } catch (InvalidArgumentException $error) {
         echo json_encode(['ok' => false, 'code' => 'input.invalid_nonlinear_system', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
     }
@@ -691,7 +705,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-equation', 'endpoint' => '?api=solve-equation', 'input' => 'single-variable equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'inequality', 'endpoint' => '?api=inequality', 'input' => 'inequality, variable, finite interval, samples', 'visualKinds' => ['inequality-intervals'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'linear-system-general', 'endpoint' => '?api=linear-system', 'input' => 'affine equations, known parameters', 'visualKinds' => ['linear-system-general'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
-        ['id' => 'nonlinear-system', 'endpoint' => '?api=nonlinear-system', 'input' => 'square nonlinear equations, variables, initial values, iterations', 'visualKinds' => ['nonlinear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'nonlinear-system', 'endpoint' => '?api=nonlinear-system', 'input' => 'square nonlinear equations, variables, initial value(s), iterations', 'visualKinds' => ['nonlinear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
