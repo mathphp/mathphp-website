@@ -76,7 +76,8 @@ installed, set `MATHPHP_SMOKE_REQUIRE_OPTIONAL=1`; the same script then checks
 the explanation, equation, system, matrix, calculus, area, root, statistics,
 Units, and Visuals success payloads, including precise unit error spans.
 The optional checks also cover complex evaluation, complex Newton equations,
-and exact polynomial inequalities. They exercise multi-word and separator aliases such as
+exact polynomial inequalities, and rational equations/inequalities with pole
+metadata. They exercise multi-word and separator aliases such as
 `metres per second` and `mile per hour to km/h`.
 They also guard affine-temperature errors such as scaling an absolute
 `20C` reading.
