@@ -347,6 +347,26 @@ function handleEvaluationRequest(): never
     exit;
 }
 
+function handleComplexEvaluationRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\ComplexExpressionEvaluator')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The complex expression evaluator is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $expression = is_array($payload) && is_string($payload['expression'] ?? null) ? $payload['expression'] : '';
+    $rawVariables = is_array($payload) && is_array($payload['variables'] ?? null) ? $payload['variables'] : [];
+    try {
+        $value = (new \MathPHP\Explaining\ComplexExpressionEvaluator())->evaluate($expression, normalizeVariables($rawVariables));
+        $result = $value instanceof \MathPHP\Explaining\ComplexNumber ? $value->toArray() : ['real' => $value, 'imaginary' => 0.0, 'formatted' => (string) $value];
+        echo json_encode(['ok' => true, 'result' => $result], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_complex_expression', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleExplanationRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -789,6 +809,7 @@ function handleCapabilitiesRequest(): never
     $state = runtimePackageState();
     $capabilities = [
         ['id' => 'evaluate', 'endpoint' => '?api=evaluate', 'input' => 'expression, variables', 'visualKinds' => [], 'requiredPackages' => ['core'], 'available' => $state['core']],
+        ['id' => 'complex-evaluate', 'endpoint' => '?api=complex-evaluate', 'input' => 'Core expression with complex unit i, numeric variables', 'visualKinds' => [], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-equation', 'endpoint' => '?api=solve-equation', 'input' => 'single-variable equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -847,6 +868,9 @@ function handleVersionRequest(): never
 
 if (($_GET['api'] ?? '') === 'evaluate') {
     handleEvaluationRequest();
+}
+if (($_GET['api'] ?? '') === 'complex-evaluate') {
+    handleComplexEvaluationRequest();
 }
 if (($_GET['api'] ?? '') === 'explain') {
     handleExplanationRequest();
