@@ -998,6 +998,7 @@ function handleNumericalWavePdeRequest(): never
     $number = static fn (string $key, float $fallback): float => is_array($payload) && is_numeric($payload[$key] ?? null) ? (float) $payload[$key] : $fallback;
     $integer = static fn (string $key, int $fallback): int => is_array($payload) && is_numeric($payload[$key] ?? null) ? (int) $payload[$key] : $fallback;
     $known = is_array($payload) && is_array($payload['known'] ?? null) ? normalizeVariables($payload['known']) : [];
+    $boundaryConditions = is_array($payload) && is_array($payload['boundaryConditions'] ?? null) ? $payload['boundaryConditions'] : [];
     try {
         $analysis = (new \MathPHP\Explaining\NumericalWavePdeAnalyzer())->analyze(
             $string('equation', ''),
@@ -1015,6 +1016,8 @@ function handleNumericalWavePdeRequest(): never
             $integer('spacePoints', 41),
             $integer('timeSteps', 100),
             $known,
+            null,
+            $boundaryConditions,
         );
         echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
     } catch (InvalidArgumentException $error) {
@@ -1373,7 +1376,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-pde', 'endpoint' => '?api=pde-numeric', 'input' => 'bounded 1D parabolic PDE, initial profile, Dirichlet boundaries, finite grid/time limits', 'visualKinds' => ['pde-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-boundary-value-ode', 'endpoint' => '?api=ode-boundary-numeric', 'input' => 'bounded second-order BVP, two endpoint values, shooting iterations and tolerance', 'visualKinds' => ['differential-equation-boundary-value'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-elliptic-pde', 'endpoint' => '?api=pde-elliptic-numeric', 'input' => 'bounded 2D elliptic PDE, per-edge Dirichlet/Neumann/Robin conditions, finite grid and iteration limits', 'visualKinds' => ['differential-equation-elliptic-pde'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
-        ['id' => 'numerical-wave-pde', 'endpoint' => '?api=pde-wave-numeric', 'input' => 'bounded 1D wave PDE, initial displacement/velocity, Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-wave'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'numerical-wave-pde', 'endpoint' => '?api=pde-wave-numeric', 'input' => 'bounded 1D wave PDE, initial displacement/velocity, per-edge Dirichlet/Neumann/Robin conditions, CFL-limited time grid', 'visualKinds' => ['pde-wave'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-wave-pde-2d', 'endpoint' => '?api=pde-wave-2d-numeric', 'input' => 'bounded 2D wave PDE, initial displacement/velocity, per-edge Dirichlet/Neumann/Robin conditions, CFL-limited time grid', 'visualKinds' => ['pde-wave-2d'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-parabolic-pde-2d', 'endpoint' => '?api=pde-parabolic-2d-numeric', 'input' => 'bounded 2D parabolic PDE, initial field, per-edge Dirichlet/Neumann/Robin conditions, CFL-limited time grid', 'visualKinds' => ['pde-heatmap-2d'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-coupled-parabolic-pde', 'endpoint' => '?api=pde-coupled-parabolic-numeric', 'input' => 'bounded coupled 1D parabolic system, per-field profiles and Dirichlet boundaries, CFL-limited time grid', 'visualKinds' => ['pde-system-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
