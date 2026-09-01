@@ -56,6 +56,31 @@
   const locale = document.querySelector('#locale');
   const resultHeading = document.querySelector('#result-heading');
 
+  // General equation solving is opt-in and bounded to a finite interval. Add
+  // the controls here so older cached markup remains compatible.
+  let numericalEquationButton = document.querySelector('#solve-equation');
+  let numericalVariable = document.querySelector('#equation-variable');
+  let numericalMinimum = document.querySelector('#equation-minimum');
+  let numericalMaximum = document.querySelector('#equation-maximum');
+  let numericalSamples = document.querySelector('#equation-samples');
+  if (equation && !numericalEquationButton) {
+    const tool = equation.closest('.equation-tool');
+    const options = document.createElement('div');
+    options.className = 'equation-numerical-options';
+    options.innerHTML = '<label for="equation-variable">Variable<input id="equation-variable" value="x" maxlength="32" pattern="[A-Za-z_][A-Za-z0-9_]*" autocomplete="off"></label><label for="equation-minimum">From<input id="equation-minimum" type="number" value="-10" step="any"></label><label for="equation-maximum">To<input id="equation-maximum" type="number" value="10" step="any"></label><label for="equation-samples">Samples<input id="equation-samples" type="number" value="256" min="8" max="4096" step="1"></label>';
+    tool?.append(options);
+    numericalEquationButton = document.createElement('button');
+    numericalEquationButton.type = 'button';
+    numericalEquationButton.className = 'button button-secondary';
+    numericalEquationButton.id = 'solve-equation';
+    numericalEquationButton.innerHTML = 'Find all roots in interval <span>≈</span>';
+    tool?.append(numericalEquationButton);
+    numericalVariable = options.querySelector('#equation-variable');
+    numericalMinimum = options.querySelector('#equation-minimum');
+    numericalMaximum = options.querySelector('#equation-maximum');
+    numericalSamples = options.querySelector('#equation-samples');
+  }
+
   // Discover the runtime before enabling optional controls. This keeps a
   // core-only deployment honest: users can still read the playground, but
   // unavailable add-on actions are visibly disabled instead of failing only
@@ -70,6 +95,7 @@
     explain: 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
+    'numerical-equation': 'the Explaining add-on',
     system: 'the Explaining add-on',
     matrix: 'the Explaining add-on',
     calculus: 'the Explaining add-on',
@@ -117,6 +143,7 @@
     setControlAvailability(button, activeEngine === 'units' ? 'units' : 'evaluate');
     setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
     setControlAvailability(analyzeButton, 'equation');
+    setControlAvailability(numericalEquationButton, 'numerical-equation');
     setControlAvailability(plotButton, 'plot');
     setControlAvailability(systemButton, 'system');
     setControlAvailability(derivativeButton, 'calculus');
@@ -336,6 +363,27 @@
     finally { refreshCapabilityControls(); }
   };
 
+  const solveNumerically = async () => {
+    const serial = beginRequest();
+    numericalEquationButton.disabled = true;
+    try {
+      const minimum = Number(numericalMinimum?.value ?? -10);
+      const maximum = Number(numericalMaximum?.value ?? 10);
+      const samples = Number(numericalSamples?.value ?? 256);
+      const variable = numericalVariable?.value.trim() || 'x';
+      const response = await fetch('?api=solve-equation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equation: equation.value, variable, minimum, maximum, samples }) });
+      const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
+      if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
+      const analysis = data.analysis;
+      const roots = Array.isArray(analysis.solutions?.roots) ? analysis.solutions.roots : [];
+      const rootText = roots.length ? roots.map((root) => Number(root).toPrecision(12)).join(', ') : 'No certified roots';
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">${escapeHtml(analysis.status)} · sampled bisection</span><strong>${escapeHtml(rootText)}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Numerical equation analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Root samples')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Numerical equations');
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the numerical equation analyzer.</strong>', 'result-error'); }
+    finally { refreshCapabilityControls(); }
+  };
+
   const plot = async () => {
     const serial = beginRequest();
     plotButton.disabled = true;
@@ -450,6 +498,7 @@
   button.addEventListener('click', run);
   explainButton.addEventListener('click', explain);
   analyzeButton.addEventListener('click', analyze);
+  numericalEquationButton?.addEventListener('click', solveNumerically);
   plotButton.addEventListener('click', plot);
   systemButton.addEventListener('click', analyzeSystem);
   derivativeButton.addEventListener('click', () => calculus('derivative'));

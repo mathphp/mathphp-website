@@ -4,6 +4,7 @@ set -eu
 
 token="${MATHPHP_PRIVATE_REPO_TOKEN:-${MATHPHP_UNITS_REPO_TOKEN:-}}"
 default_ref="${MATHPHP_PRIVATE_REPO_REF:-v0.1.0}"
+explaining_ref="${MATHPHP_EXPLAINING_REF:-v0.2.0}"
 
 install_private_package() {
     package="$1"
@@ -32,7 +33,7 @@ if [ -n "$token" ]; then
     mkdir -p /app/private
     install_private_package "mathphp-units" "/app/private/mathphp-units" "${MATHPHP_UNITS_REF:-$default_ref}"
     install_private_package "mathphp-visuals" "/app/private/mathphp-visuals" "${MATHPHP_VISUALS_REF:-$default_ref}"
-    install_private_package "mathphp-explaining" "/app/private/mathphp-explaining" "${MATHPHP_EXPLAINING_REF:-$default_ref}"
+    install_private_package "mathphp-explaining" "/app/private/mathphp-explaining" "$explaining_ref"
 else
     echo 'MATHPHP_PRIVATE_REPO_TOKEN is not set; continuing without optional packages.' >&2
 fi
