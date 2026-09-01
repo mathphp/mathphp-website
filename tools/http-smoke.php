@@ -148,6 +148,9 @@ try {
     $evaluation = requestJson($baseUrl, '/?api=evaluate', ['expression' => '2 + 2', 'variables' => []]);
     check(($evaluation['body']['ok'] ?? false) === true && ($evaluation['body']['result'] ?? null) === 4, 'core evaluates 2 + 2');
 
+    $notation = requestJson($baseUrl, '/?api=evaluate', ['expression' => '2² + √9', 'variables' => []]);
+    check(($notation['body']['ok'] ?? false) === true && abs((float) ($notation['body']['result'] ?? NAN) - 7.0) < 1e-10, 'core evaluates superscript and radical notation');
+
     $error = requestJson($baseUrl, '/?api=evaluate', ['expression' => '10 / 0', 'variables' => []]);
     check(($error['body']['ok'] ?? true) === false && is_string($error['body']['code'] ?? null), 'core returns a structured arithmetic error');
 
