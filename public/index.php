@@ -795,6 +795,30 @@ function handleRecurrenceRequest(): never
     exit;
 }
 
+function handleLimitRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\LimitAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The limit analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $expression = is_array($payload) && is_string($payload['expression'] ?? null) ? $payload['expression'] : '';
+    $variable = is_array($payload) && is_string($payload['variable'] ?? null) ? $payload['variable'] : 'x';
+    $point = is_array($payload) && is_numeric($payload['point'] ?? null) ? (float) $payload['point'] : 0.0;
+    $direction = is_array($payload) && is_string($payload['direction'] ?? null) ? $payload['direction'] : 'both';
+    $samples = is_array($payload) && is_numeric($payload['samples'] ?? null) ? (int) $payload['samples'] : 14;
+    $tolerance = is_array($payload) && is_numeric($payload['tolerance'] ?? null) ? (float) $payload['tolerance'] : 1e-8;
+    $rawKnown = is_array($payload) && is_array($payload['known'] ?? null) ? $payload['known'] : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\LimitAnalyzer())->analyze($expression, $variable, $point, $direction, $samples, $tolerance, normalizeVariables($rawKnown));
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_limit', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -965,6 +989,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'second-order-ode', 'endpoint' => '?api=ode-second', 'input' => "constant-coefficient second-order ODE, optional y/y' initial values", 'visualKinds' => ['differential-equation-second-order'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-second-order-ode', 'endpoint' => '?api=ode-second-numeric', 'input' => "second-order IVP (y'' = f), initial y/y', target, steps", 'visualKinds' => ['differential-equation-second-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'limit', 'endpoint' => '?api=limit', 'input' => 'expression, variable, finite point, one- or two-sided direction, samples', 'visualKinds' => ['limit-approach'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1067,6 +1092,9 @@ if (($_GET['api'] ?? '') === 'ode-second-numeric') {
 }
 if (($_GET['api'] ?? '') === 'recurrence') {
     handleRecurrenceRequest();
+}
+if (($_GET['api'] ?? '') === 'limit') {
+    handleLimitRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();

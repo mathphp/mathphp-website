@@ -66,6 +66,9 @@
   let numericalSamples = document.querySelector('#equation-samples');
   let piecewiseEquationButton = document.querySelector('#analyze-piecewise');
   let recurrenceButton = document.querySelector('#analyze-recurrence');
+  let limitButton = document.querySelector('#estimate-limit');
+  let limitPoint = document.querySelector('#limit-point');
+  let limitDirection = document.querySelector('#limit-direction');
   if (equation && !numericalEquationButton) {
     const tool = equation.closest('.equation-tool');
     const options = document.createElement('div');
@@ -104,6 +107,21 @@
     recurrenceInitial = tool.querySelector('#recurrence-initial');
     recurrenceTerms = tool.querySelector('#recurrence-terms');
   }
+  if (expression && !limitButton) {
+    const row = document.querySelector('.calculus-actions');
+    const options = document.createElement('fieldset');
+    options.className = 'limit-options';
+    options.innerHTML = '<legend>Limit options <small>numerical estimate</small></legend><label for="limit-point">As variable approaches<input id="limit-point" type="number" value="0" step="any"></label><label for="limit-direction">Direction<select id="limit-direction"><option value="both">Both sides</option><option value="left">From the left</option><option value="right">From the right</option></select></label>';
+    row?.insertAdjacentElement('afterend', options);
+    limitButton = document.createElement('button');
+    limitButton.type = 'button';
+    limitButton.className = 'button button-secondary';
+    limitButton.id = 'estimate-limit';
+    limitButton.innerHTML = 'Estimate limit <span>→</span>';
+    row?.append(limitButton);
+    limitPoint = options.querySelector('#limit-point');
+    limitDirection = options.querySelector('#limit-direction');
+  }
 
   // Discover the runtime before enabling optional controls. This keeps a
   // core-only deployment honest: users can still read the playground, but
@@ -120,6 +138,7 @@
     piecewise: 'the Explaining add-on',
     'piecewise-equation': 'the Explaining add-on',
     recurrence: 'the Explaining add-on',
+    limit: 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
     'numerical-equation': 'the Explaining add-on',
@@ -173,6 +192,7 @@
     setControlAvailability(analyzeButton, 'equation');
     setControlAvailability(piecewiseEquationButton, 'piecewise-equation');
     setControlAvailability(recurrenceButton, 'recurrence');
+    setControlAvailability(limitButton, 'limit');
     setControlAvailability(numericalEquationButton, 'numerical-equation');
     setControlAvailability(plotButton, 'plot');
     setControlAvailability(systemButton, 'system');
@@ -473,6 +493,25 @@
     finally { refreshCapabilityControls(); }
   };
 
+  const estimateLimit = async () => {
+    const serial = beginRequest();
+    limitButton.disabled = true;
+    try {
+      const parsed = readVariables();
+      if (!parsed.ok) return;
+      const response = await fetch('?api=limit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression: expression.value, variable: 'x', point: Number(limitPoint?.value ?? 0), direction: limitDirection?.value || 'both', samples: 14, tolerance: 1e-8, known: parsed.value }) });
+      const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
+      if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
+      const analysis = data.analysis;
+      const limitText = analysis.limit === null || analysis.limit === undefined ? 'No finite estimate certified' : Number(analysis.limit).toPrecision(12);
+      const sampleCount = Array.isArray(analysis.samples) ? analysis.samples.length : 0;
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">→</span><div><span class="explanation-label">limit · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(limitText)}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Limit estimation steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol><p class="result-footnote">${sampleCount} geometric samples retained; numerical evidence is not a symbolic proof.</p>${visualDetails(analysis.visual, 'Limit approach')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Limits');
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the limit analyzer.</strong><span>Check that the private explaining package is installed.</span>', 'result-error'); }
+    finally { refreshCapabilityControls(); }
+  };
+
   const plot = async () => {
     const serial = beginRequest();
     plotButton.disabled = true;
@@ -591,6 +630,7 @@
   numericalEquationButton?.addEventListener('click', solveNumerically);
   piecewiseEquationButton?.addEventListener('click', solvePiecewise);
   recurrenceButton?.addEventListener('click', solveRecurrence);
+  limitButton?.addEventListener('click', estimateLimit);
   plotButton.addEventListener('click', plot);
   systemButton.addEventListener('click', analyzeSystem);
   derivativeButton.addEventListener('click', () => calculus('derivative'));

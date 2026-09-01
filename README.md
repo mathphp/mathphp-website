@@ -45,7 +45,7 @@ the requested ref (defaulting to `v0.3.6`) before installing dependencies, and t
 responses expose the resolved revision. Optional package roots also write a
 `.mathphp-revision` marker after checkout; this prevents a dependency lockfile
 from masking the actual add-on source revision running in the container.
-The Explaining add-on defaults to its compatible `v0.32.0` release. Units and
+The Explaining add-on defaults to its compatible `v0.33.0` release. Units and
 Visuals default to their compatible `v0.3.6` releases.
 The Docker dependency stage also carries an explicit cache key tied to the
 reviewed Core revision, so a remote build cache cannot silently retain older
@@ -81,6 +81,8 @@ The optional checks also cover complex evaluation, complex Newton equations,
 exact polynomial inequalities, rational equations/inequalities with pole
 metadata, and elementary inverse equations. They exercise multi-word and separator aliases such as
 `metres per second` and `mile per hour to km/h`.
+They also estimate finite one-sided and two-sided limits while preserving
+undefined samples and the explicit non-proof `complete: false` marker.
 They also guard affine-temperature errors such as scaling an absolute
 `20C` reading.
 Zero quantities raised to negative powers are checked as structured division
