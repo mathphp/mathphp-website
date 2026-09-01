@@ -367,6 +367,38 @@ function handleComplexEvaluationRequest(): never
     exit;
 }
 
+function handleComplexEquationRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\ComplexEquationAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The complex equation analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $variable = is_array($payload) && is_string($payload['variable'] ?? null) ? $payload['variable'] : 'z';
+    $rawInitial = is_array($payload) ? ($payload['initial'] ?? 0.0) : 0.0;
+    try {
+        if (is_array($rawInitial)) {
+            if (!is_numeric($rawInitial['real'] ?? null) || !is_numeric($rawInitial['imaginary'] ?? null)) {
+                throw new InvalidArgumentException('Complex initial values need numeric real and imaginary fields.');
+            }
+            $initial = new \MathPHP\Explaining\ComplexNumber((float) $rawInitial['real'], (float) $rawInitial['imaginary']);
+        } elseif (is_numeric($rawInitial)) {
+            $initial = (float) $rawInitial;
+        } else {
+            throw new InvalidArgumentException('Complex initial value must be a number or {real, imaginary}.');
+        }
+        $iterations = is_array($payload) && is_numeric($payload['iterations'] ?? null) ? (int) $payload['iterations'] : 40;
+        $tolerance = is_array($payload) && is_numeric($payload['tolerance'] ?? null) ? (float) $payload['tolerance'] : 1e-10;
+        $analysis = (new \MathPHP\Explaining\ComplexEquationAnalyzer())->analyze($equation, $variable, $initial, $iterations, $tolerance);
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_complex_equation', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleExplanationRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -810,6 +842,7 @@ function handleCapabilitiesRequest(): never
     $capabilities = [
         ['id' => 'evaluate', 'endpoint' => '?api=evaluate', 'input' => 'expression, variables', 'visualKinds' => [], 'requiredPackages' => ['core'], 'available' => $state['core']],
         ['id' => 'complex-evaluate', 'endpoint' => '?api=complex-evaluate', 'input' => 'Core expression with complex unit i, numeric variables', 'visualKinds' => [], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'complex-equation', 'endpoint' => '?api=complex-equation', 'input' => 'complex equality, variable, complex initial value, iterations', 'visualKinds' => ['complex-equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-equation', 'endpoint' => '?api=solve-equation', 'input' => 'single-variable equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -871,6 +904,9 @@ if (($_GET['api'] ?? '') === 'evaluate') {
 }
 if (($_GET['api'] ?? '') === 'complex-evaluate') {
     handleComplexEvaluationRequest();
+}
+if (($_GET['api'] ?? '') === 'complex-equation') {
+    handleComplexEquationRequest();
 }
 if (($_GET['api'] ?? '') === 'explain') {
     handleExplanationRequest();
