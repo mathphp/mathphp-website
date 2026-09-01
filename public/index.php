@@ -324,6 +324,23 @@ function normalizeVariables(array $rawVariables): array
     return $variables;
 }
 
+/**
+ * @param array<string|int, mixed> $rawInitial
+ * @return array<int, int|float>
+ */
+function normalizeInitialValues(array $rawInitial): array
+{
+    $initial = [];
+    foreach ($rawInitial as $index => $value) {
+        if ((!is_int($index) && (!is_string($index) || preg_match('/^-?\d+$/', $index) !== 1)) || (!is_int($value) && !is_float($value)) || !is_finite((float) $value)) {
+            throw new InvalidArgumentException('Initial sequence values must be finite numbers keyed by integer indices.');
+        }
+        $initial[(int) $index] = $value;
+    }
+
+    return $initial;
+}
+
 function handleEvaluationRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -756,6 +773,28 @@ function handleNumericalSecondOrderOdeRequest(): never
     exit;
 }
 
+function handleRecurrenceRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\RecurrenceAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The recurrence analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $recurrence = is_array($payload) && is_string($payload['recurrence'] ?? null) ? $payload['recurrence'] : '';
+    $rawInitial = is_array($payload) && is_array($payload['initial'] ?? null) ? $payload['initial'] : [];
+    $terms = is_array($payload) && is_numeric($payload['terms'] ?? null) ? (int) $payload['terms'] : 12;
+    $start = is_array($payload) && is_numeric($payload['start'] ?? null) ? (int) $payload['start'] : null;
+    $rawKnown = is_array($payload) && is_array($payload['known'] ?? null) ? $payload['known'] : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\RecurrenceAnalyzer())->analyze($recurrence, normalizeInitialValues($rawInitial), $terms, $start, normalizeVariables($rawKnown));
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_recurrence', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -925,6 +964,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'numerical-ode-system', 'endpoint' => '?api=ode-system', 'input' => "coupled first-order IVP system, variables, initial state, target, steps", 'visualKinds' => ['differential-equation-system-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'second-order-ode', 'endpoint' => '?api=ode-second', 'input' => "constant-coefficient second-order ODE, optional y/y' initial values", 'visualKinds' => ['differential-equation-second-order'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-second-order-ode', 'endpoint' => '?api=ode-second-numeric', 'input' => "second-order IVP (y'' = f), initial y/y', target, steps", 'visualKinds' => ['differential-equation-second-order-numeric'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'recurrence', 'endpoint' => '?api=recurrence', 'input' => 'recurrence, finite initial sequence, term count', 'visualKinds' => ['recurrence-sequence'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -1024,6 +1064,9 @@ if (($_GET['api'] ?? '') === 'ode-second') {
 }
 if (($_GET['api'] ?? '') === 'ode-second-numeric') {
     handleNumericalSecondOrderOdeRequest();
+}
+if (($_GET['api'] ?? '') === 'recurrence') {
+    handleRecurrenceRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();

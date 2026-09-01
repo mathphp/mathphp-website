@@ -65,6 +65,7 @@
   let numericalMaximum = document.querySelector('#equation-maximum');
   let numericalSamples = document.querySelector('#equation-samples');
   let piecewiseEquationButton = document.querySelector('#analyze-piecewise');
+  let recurrenceButton = document.querySelector('#analyze-recurrence');
   if (equation && !numericalEquationButton) {
     const tool = equation.closest('.equation-tool');
     const options = document.createElement('div');
@@ -90,6 +91,19 @@
     piecewiseEquationButton.innerHTML = 'Solve piecewise equation <span>≈</span>';
     equation.closest('.equation-tool')?.append(piecewiseEquationButton);
   }
+  let recurrenceInput = document.querySelector('#recurrence');
+  let recurrenceInitial = document.querySelector('#recurrence-initial');
+  let recurrenceTerms = document.querySelector('#recurrence-terms');
+  if (equation && !recurrenceButton) {
+    const tool = document.createElement('div');
+    tool.className = 'equation-tool recurrence-tool';
+    tool.innerHTML = '<div class="panel-heading"><span>Recurrence expansion</span><span class="panel-hint">finite sequence</span></div><input id="recurrence" value="a(n+1) = 2*a(n) + 1" aria-label="Recurrence"><label>Initial values <small>JSON object keyed by n</small><textarea id="recurrence-initial" spellcheck="false">{"0":1}</textarea></label><label>Terms<input id="recurrence-terms" type="number" value="8" min="1" max="10000" step="1"></label><button class="button button-secondary" id="analyze-recurrence">Expand recurrence <span>→</span></button>';
+    equation.closest('.editor-panel')?.append(tool);
+    recurrenceButton = tool.querySelector('#analyze-recurrence');
+    recurrenceInput = tool.querySelector('#recurrence');
+    recurrenceInitial = tool.querySelector('#recurrence-initial');
+    recurrenceTerms = tool.querySelector('#recurrence-terms');
+  }
 
   // Discover the runtime before enabling optional controls. This keeps a
   // core-only deployment honest: users can still read the playground, but
@@ -105,6 +119,7 @@
     explain: 'the Explaining add-on',
     piecewise: 'the Explaining add-on',
     'piecewise-equation': 'the Explaining add-on',
+    recurrence: 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
     'numerical-equation': 'the Explaining add-on',
@@ -157,6 +172,7 @@
     setControlAvailability(piecewiseButton, 'piecewise');
     setControlAvailability(analyzeButton, 'equation');
     setControlAvailability(piecewiseEquationButton, 'piecewise-equation');
+    setControlAvailability(recurrenceButton, 'recurrence');
     setControlAvailability(numericalEquationButton, 'numerical-equation');
     setControlAvailability(plotButton, 'plot');
     setControlAvailability(systemButton, 'system');
@@ -438,6 +454,25 @@
     finally { refreshCapabilityControls(); }
   };
 
+  const solveRecurrence = async () => {
+    const serial = beginRequest();
+    recurrenceButton.disabled = true;
+    try {
+      let initial;
+      try { initial = JSON.parse(recurrenceInitial?.value || '{}'); } catch { showResult('<strong>Initial values must be valid JSON.</strong>', 'result-error'); return; }
+      const terms = Number(recurrenceTerms?.value ?? 12);
+      const response = await fetch('?api=recurrence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recurrence: recurrenceInput?.value || '', initial, terms }) });
+      const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
+      if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
+      const analysis = data.analysis;
+      const sequence = Object.entries(analysis.sequence || {}).map(([index, value]) => `<strong>${escapeHtml(`${index}: ${value}`)}</strong>`).join(' ');
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">→</span><div><span class="explanation-label">recurrence · ${escapeHtml(analysis.status)}</span><strong>${sequence || 'No terms generated'}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Recurrence expansion steps">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Sequence visual')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Recurrences');
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the recurrence analyzer.</strong>', 'result-error'); }
+    finally { refreshCapabilityControls(); }
+  };
+
   const plot = async () => {
     const serial = beginRequest();
     plotButton.disabled = true;
@@ -555,6 +590,7 @@
   analyzeButton.addEventListener('click', analyze);
   numericalEquationButton?.addEventListener('click', solveNumerically);
   piecewiseEquationButton?.addEventListener('click', solvePiecewise);
+  recurrenceButton?.addEventListener('click', solveRecurrence);
   plotButton.addEventListener('click', plot);
   systemButton.addEventListener('click', analyzeSystem);
   derivativeButton.addEventListener('click', () => calculus('derivative'));
