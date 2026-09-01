@@ -546,6 +546,24 @@ function handleNonlinearSystemRequest(): never
     exit;
 }
 
+function handleDifferentialEquationRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\DifferentialEquationAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The differential-equation analyzer is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $dependent = is_array($payload) && is_string($payload['dependent'] ?? null) ? $payload['dependent'] : 'y';
+    $independent = is_array($payload) && is_string($payload['independent'] ?? null) ? $payload['independent'] : 'x';
+    $initialIndependent = is_array($payload) && is_numeric($payload['initialIndependent'] ?? null) ? (float) $payload['initialIndependent'] : null;
+    $initialValue = is_array($payload) && is_numeric($payload['initialValue'] ?? null) ? (float) $payload['initialValue'] : null;
+    $analysis = (new \MathPHP\Explaining\DifferentialEquationAnalyzer())->analyze($equation, $dependent, $independent, $initialIndependent, $initialValue);
+    echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    exit;
+}
+
 function handlePlotRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -706,6 +724,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'inequality', 'endpoint' => '?api=inequality', 'input' => 'inequality, variable, finite interval, samples', 'visualKinds' => ['inequality-intervals'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'linear-system-general', 'endpoint' => '?api=linear-system', 'input' => 'affine equations, known parameters', 'visualKinds' => ['linear-system-general'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'nonlinear-system', 'endpoint' => '?api=nonlinear-system', 'input' => 'nonlinear equations (square/overdetermined), variables, initial value(s), iterations', 'visualKinds' => ['nonlinear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'differential-equation', 'endpoint' => '?api=ode', 'input' => "first-order linear ODE (y' = a·y + b), optional initial condition", 'visualKinds' => ['differential-equation'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'system', 'endpoint' => '?api=system', 'input' => '2×2 system', 'visualKinds' => ['linear-system'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'matrix', 'endpoint' => '?api=matrix', 'input' => '2×2 matrix', 'visualKinds' => ['matrix-heatmap'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'calculus', 'endpoint' => '?api=calculus', 'input' => 'expression, operation, variable', 'visualKinds' => ['calculus-derivative', 'calculus-integral'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -778,6 +797,9 @@ if (($_GET['api'] ?? '') === 'linear-system') {
 }
 if (($_GET['api'] ?? '') === 'nonlinear-system') {
     handleNonlinearSystemRequest();
+}
+if (($_GET['api'] ?? '') === 'ode') {
+    handleDifferentialEquationRequest();
 }
 if (($_GET['api'] ?? '') === 'plot') {
     handlePlotRequest();
