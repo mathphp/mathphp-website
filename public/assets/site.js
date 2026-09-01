@@ -64,6 +64,7 @@
   let numericalMinimum = document.querySelector('#equation-minimum');
   let numericalMaximum = document.querySelector('#equation-maximum');
   let numericalSamples = document.querySelector('#equation-samples');
+  let piecewiseEquationButton = document.querySelector('#analyze-piecewise');
   if (equation && !numericalEquationButton) {
     const tool = equation.closest('.equation-tool');
     const options = document.createElement('div');
@@ -81,6 +82,14 @@
     numericalMaximum = options.querySelector('#equation-maximum');
     numericalSamples = options.querySelector('#equation-samples');
   }
+  if (equation && !piecewiseEquationButton) {
+    piecewiseEquationButton = document.createElement('button');
+    piecewiseEquationButton.type = 'button';
+    piecewiseEquationButton.className = 'button button-secondary';
+    piecewiseEquationButton.id = 'analyze-piecewise';
+    piecewiseEquationButton.innerHTML = 'Solve piecewise equation <span>≈</span>';
+    equation.closest('.equation-tool')?.append(piecewiseEquationButton);
+  }
 
   // Discover the runtime before enabling optional controls. This keeps a
   // core-only deployment honest: users can still read the playground, but
@@ -95,6 +104,7 @@
   const capabilityLabel = (id) => ({
     explain: 'the Explaining add-on',
     piecewise: 'the Explaining add-on',
+    'piecewise-equation': 'the Explaining add-on',
     'unit-explain': 'Explaining + Units add-ons',
     equation: 'the Explaining add-on',
     'numerical-equation': 'the Explaining add-on',
@@ -146,6 +156,7 @@
     setControlAvailability(explainButton, activeEngine === 'units' ? 'unit-explain' : 'explain');
     setControlAvailability(piecewiseButton, 'piecewise');
     setControlAvailability(analyzeButton, 'equation');
+    setControlAvailability(piecewiseEquationButton, 'piecewise-equation');
     setControlAvailability(numericalEquationButton, 'numerical-equation');
     setControlAvailability(plotButton, 'plot');
     setControlAvailability(systemButton, 'system');
@@ -404,6 +415,29 @@
     finally { refreshCapabilityControls(); }
   };
 
+  const solvePiecewise = async () => {
+    const serial = beginRequest();
+    piecewiseEquationButton.disabled = true;
+    try {
+      const minimum = Number(numericalMinimum?.value ?? -10);
+      const maximum = Number(numericalMaximum?.value ?? 10);
+      const samples = Number(numericalSamples?.value ?? 256);
+      const variable = numericalVariable?.value.trim() || 'x';
+      const parsed = readVariables();
+      if (!parsed.ok) return;
+      const response = await fetch('?api=piecewise-equation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equation: equation.value, variable, minimum, maximum, samples, known: parsed.value }) });
+      const data = await response.json();
+      if (!isCurrentRequest(serial)) return;
+      if (!data.ok) { showResult(`<strong>${escapeHtml(data.code)}</strong><p>${escapeHtml(data.message)}</p>`, 'result-error'); return; }
+      const analysis = data.analysis;
+      const roots = Array.isArray(analysis.solutions?.roots) ? analysis.solutions.roots : [];
+      const rootText = roots.length ? roots.map((root) => Number(root).toPrecision(12)).join(', ') : 'No certified roots';
+      showResult(`<div class="explanation-result"><div class="explanation-summary"><span class="result-symbol">≈</span><div><span class="explanation-label">piecewise roots · ${escapeHtml(analysis.status)}</span><strong>${escapeHtml(rootText)}</strong><span class="explanation-hint">${escapeHtml(analysis.summary)}</span></div></div><ol class="step-list" aria-label="Piecewise equation analysis">${analysis.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${visualDetails(analysis.visual, 'Branch-safe root samples')}</div>`, 'result-explanation');
+      setEngineMeta('MathPHP Explaining · Piecewise equations');
+    } catch { if (isCurrentRequest(serial)) showResult('<strong>Could not reach the piecewise equation analyzer.</strong>', 'result-error'); }
+    finally { refreshCapabilityControls(); }
+  };
+
   const plot = async () => {
     const serial = beginRequest();
     plotButton.disabled = true;
@@ -520,6 +554,7 @@
   piecewiseButton?.addEventListener('click', evaluatePiecewise);
   analyzeButton.addEventListener('click', analyze);
   numericalEquationButton?.addEventListener('click', solveNumerically);
+  piecewiseEquationButton?.addEventListener('click', solvePiecewise);
   plotButton.addEventListener('click', plot);
   systemButton.addEventListener('click', analyzeSystem);
   derivativeButton.addEventListener('click', () => calculus('derivative'));

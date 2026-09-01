@@ -445,6 +445,30 @@ function handlePiecewiseRequest(): never
     exit;
 }
 
+function handlePiecewiseEquationRequest(): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    if (!class_exists('MathPHP\\Explaining\\PiecewiseEquationAnalyzer')) {
+        echo json_encode(['ok' => false, 'code' => 'explain.unavailable', 'message' => 'The private mathphp-explaining package is not installed on this deployment.'], JSON_THROW_ON_ERROR);
+        exit;
+    }
+    $payload = json_decode((string) file_get_contents('php://input'), true);
+    $equation = is_array($payload) && is_string($payload['equation'] ?? null) ? $payload['equation'] : '';
+    $variable = is_array($payload) && is_string($payload['variable'] ?? null) ? $payload['variable'] : 'x';
+    $minimum = is_array($payload) && is_numeric($payload['minimum'] ?? null) ? (float) $payload['minimum'] : -10.0;
+    $maximum = is_array($payload) && is_numeric($payload['maximum'] ?? null) ? (float) $payload['maximum'] : 10.0;
+    $samples = is_array($payload) && is_numeric($payload['samples'] ?? null) ? (int) $payload['samples'] : 256;
+    $iterations = is_array($payload) && is_numeric($payload['iterations'] ?? null) ? (int) $payload['iterations'] : 60;
+    $rawKnown = is_array($payload) && is_array($payload['known'] ?? null) ? $payload['known'] : [];
+    try {
+        $analysis = (new \MathPHP\Explaining\PiecewiseEquationAnalyzer())->analyze($equation, $variable, $minimum, $maximum, $samples, $iterations, normalizeVariables($rawKnown));
+        echo json_encode(['ok' => true, 'analysis' => $analysis->toArray()], JSON_THROW_ON_ERROR);
+    } catch (InvalidArgumentException $error) {
+        echo json_encode(['ok' => false, 'code' => 'input.invalid_piecewise_equation', 'message' => $error->getMessage()], JSON_THROW_ON_ERROR);
+    }
+    exit;
+}
+
 function handleUnitsRequest(): never
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -864,6 +888,7 @@ function handleCapabilitiesRequest(): never
         ['id' => 'complex-equation', 'endpoint' => '?api=complex-equation', 'input' => 'complex equality, variable, complex initial value, iterations', 'visualKinds' => ['complex-equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'explain', 'endpoint' => '?api=explain', 'input' => 'expression, variables, locale', 'visualKinds' => ['dependency-graph'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'piecewise', 'endpoint' => '?api=piecewise', 'input' => 'piecewise/if expression, numeric variables', 'visualKinds' => [], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
+        ['id' => 'piecewise-equation', 'endpoint' => '?api=piecewise-equation', 'input' => 'piecewise equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'equation', 'endpoint' => '?api=analyze', 'input' => 'equation, known', 'visualKinds' => ['equation-flow'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'numerical-equation', 'endpoint' => '?api=solve-equation', 'input' => 'single-variable equality, variable, finite interval, samples', 'visualKinds' => ['equation-roots'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
         ['id' => 'inequality', 'endpoint' => '?api=inequality', 'input' => 'inequality, variable, finite interval, samples', 'visualKinds' => ['inequality-intervals'], 'requiredPackages' => ['core', 'explaining'], 'available' => $state['core'] && $state['optional']['explaining']],
@@ -933,6 +958,9 @@ if (($_GET['api'] ?? '') === 'explain') {
 }
 if (($_GET['api'] ?? '') === 'piecewise') {
     handlePiecewiseRequest();
+}
+if (($_GET['api'] ?? '') === 'piecewise-equation') {
+    handlePiecewiseEquationRequest();
 }
 if (($_GET['api'] ?? '') === 'units') {
     handleUnitsRequest();
