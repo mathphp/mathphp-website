@@ -4,7 +4,7 @@ set -eu
 
 token="${MATHPHP_PRIVATE_REPO_TOKEN:-${MATHPHP_UNITS_REPO_TOKEN:-}}"
 default_ref="${MATHPHP_PRIVATE_REPO_REF:-v0.3.3}"
-explaining_ref="${MATHPHP_EXPLAINING_REF:-v0.24.1}"
+explaining_ref="${MATHPHP_EXPLAINING_REF:-v0.25.1}"
 
 install_private_package() {
     package="$1"
