@@ -51,9 +51,11 @@ The Docker dependency stage also carries an explicit cache key tied to the
 reviewed Core revision, so a remote build cache cannot silently retain older
 Core vendor files after a lockfile update.
 
-These endpoints are read-only. Payment, sponsorship, account provisioning, and
-private-repository access remain deliberate product placeholders; the website
-does not issue tokens or synchronize users.
+These endpoints are read-only. Payment remains a deliberate product placeholder;
+the website does not issue tokens or synchronize users. GitHub Sponsors get read
+access to the private add-ons through the separate `mathphp/mathphp-sponsors`
+service, which manages the `sponsors` team. The site links to its access page,
+configurable with `MATHPHP_SPONSOR_ACCESS_URL`.
 
 The Playground escapes all API-provided text before inserting it into the
 result panel. SVG returned by the private Visuals renderer passes through a
