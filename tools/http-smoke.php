@@ -170,7 +170,18 @@ try {
     $optionalChecks = [
         'explain' => ['path' => '/?api=explain', 'payload' => ['expression' => '(5*2)*2', 'variables' => [], 'locale' => 'en'], 'success' => static fn (array $body): bool => ($body['explanation']['result'] ?? null) === 20 && count($body['explanation']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
         'piecewise' => ['path' => '/?api=piecewise', 'payload' => ['expression' => 'piecewise(x < 0: -x; otherwise: x)', 'variables' => ['x' => -3]], 'success' => static fn (array $body): bool => ($body['result']['value'] ?? null) === 3 && ($body['result']['branch'] ?? null) === 1 && count($body['result']['steps'] ?? []) > 0, 'unavailable' => 'explain.unavailable'],
-        'piecewise-equation' => ['path' => '/?api=piecewise-equation', 'payload' => ['equation' => 'piecewise(x < 0: -x; otherwise: x) = 3', 'variable' => 'x', 'minimum' => -5, 'maximum' => 5, 'samples' => 128], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'partial' && count($body['analysis']['solutions']['roots'] ?? []) === 2 && ($body['analysis']['solutions']['complete'] ?? true) === false, 'unavailable' => 'explain.unavailable'],
+        'piecewise-equation' => ['path' => '/?api=piecewise-equation', 'payload' => ['equation' => 'piecewise(x < 0: -x; otherwise: x) = 3', 'variable' => 'x', 'minimum' => -5, 'maximum' => 5, 'samples' => 128], 'success' => static function (array $body): bool {
+            $solutions = $body['analysis']['solutions'] ?? [];
+            $roots = $solutions['roots'] ?? [];
+            $status = $body['analysis']['status'] ?? null;
+            $complete = $solutions['complete'] ?? false;
+
+            return count($roots) === 2
+                && (float) $roots[0] === -3.0
+                && (float) $roots[1] === 3.0
+                && (($status === 'solved' && $complete === true)
+                    || ($status === 'partial' && $complete === false));
+        }, 'unavailable' => 'explain.unavailable'],
         'numerical-second-order-ode' => ['path' => '/?api=ode-second-numeric', 'payload' => ['equation' => "y'' = -y", 'dependent' => 'y', 'independent' => 'x', 'initialIndependent' => 0, 'initialValue' => 1, 'initialDerivative' => 0, 'targetIndependent' => 1.5707963267948966, 'steps' => 100], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && abs((float) ($body['analysis']['solution']['final']['y'] ?? NAN)) < 1e-7, 'unavailable' => 'explain.unavailable'],
         'numerical-higher-order-ode' => ['path' => '/?api=ode-higher-numeric', 'payload' => ['equation' => "y''' = -y'", 'dependent' => 'y', 'independent' => 'x', 'initial' => [0, 1, 0], 'targetIndependent' => 1.5707963267948966, 'steps' => 160], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['solution']['order'] ?? null) === 3 && abs((float) ($body['analysis']['solution']['final']['values'][0] ?? NAN) - 1.0) < 1e-7, 'unavailable' => 'explain.unavailable'],
         'numerical-pde' => ['path' => '/?api=pde-numeric', 'payload' => ['equation' => 'u_t = 0.1*u_xx^2', 'initialProfile' => '0', 'leftBoundary' => '0', 'rightBoundary' => '0', 'boundaryConditions' => ['left' => ['type' => 'neumann', 'value' => '0'], 'right' => ['type' => 'dirichlet', 'value' => '0']], 'spacePoints' => 17, 'timeSteps' => 8], 'success' => static fn (array $body): bool => ($body['analysis']['status'] ?? null) === 'solved' && ($body['analysis']['solution']['method'] ?? null) === 'explicit-finite-difference' && ($body['analysis']['solution']['operatorMode'] ?? null) === 'direct-nonlinear' && ($body['analysis']['solution']['boundaryConditions']['left']['type'] ?? null) === 'neumann' && abs((float) ($body['analysis']['solution']['final']['values'][8] ?? NAN)) < 1e-10, 'unavailable' => 'explain.unavailable'],
