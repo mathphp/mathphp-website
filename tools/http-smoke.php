@@ -124,7 +124,7 @@ try {
         '/?page=explaining' => 'Teach the calculation.',
         '/?page=visuals' => 'Show the calculation.',
         '/?page=units' => 'Keep the unit attached.',
-        '/?page=pricing' => 'Choose the add-on model later.',
+        '/?page=pricing' => 'Support the project.',
         '/?page=docs' => 'Learn the engine.',
         '/?page=playground' => 'Make a calculation.',
         '/?page=units-guide' => '25m to km',
@@ -144,6 +144,11 @@ try {
         check(str_contains($page['body'], $marker), 'page ' . $path . ' contains its contract marker');
         check(!str_contains($page['body'], 'Fatal error') && !str_contains($page['body'], 'Warning:'), 'page ' . $path . ' has no PHP runtime warning');
     }
+
+    $sponsorshipPage = requestText($baseUrl, '/?page=pricing')['body'];
+    check(str_contains($sponsorshipPage, 'https://github.com/sponsors/mathphp'), 'sponsorship page links to GitHub Sponsors');
+    check(str_contains($sponsorshipPage, 'https://mathphp-sponsors.ulties.workers.dev'), 'sponsorship page links to the access portal');
+    check(str_contains($sponsorshipPage, 'One-time sponsorships do not qualify'), 'sponsorship page states one-time eligibility policy');
 
     foreach (['explaining', 'visuals', 'units'] as $packagePage) {
         $page = requestText($baseUrl, '/?page=' . $packagePage);
