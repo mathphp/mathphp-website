@@ -16,6 +16,18 @@ php -S 127.0.0.1:8080 -t public
 
 Then open <http://127.0.0.1:8080/>.
 
+## Deployment
+
+The website runs on EasyPanel as the `mathphp/web` service. EasyPanel auto-deploy
+is enabled: pushing a change to this repository's `main` branch triggers a
+service deployment. This was verified on 2026-10-31 when the `Add accent rule to
+site header` commit deployed successfully.
+
+The verified EasyPanel hostname is <https://mathphp-web.2nmpax.easypanel.host/>.
+At the time of verification, <https://mathphp.com/> still showed Porkbun's
+parked-domain page, so its DNS needs to be pointed at the website service before
+the custom domain serves this deployment.
+
 The site installs the public `mathphp/mathphp` package through Composer. The
 private add-ons are optional; when they are not installed, their interactive
 endpoints report an explicit unavailable response while the package pages and
